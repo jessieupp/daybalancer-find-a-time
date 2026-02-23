@@ -1,5 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="en">
+<!--
+  Find a Time · A free scheduling tool
+  Brought to you by DayBalancer LLC
+  https://daybalancer.com
+-->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -287,7 +293,7 @@
       Pick a meeting time without the back-and-forth. Share a code - let others mark when they're free, and you'll see the best times at a glance.
     </p>
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;">
-      <button class="btn btn-full btn-lg" onclick="showView('create')">Start scheduling</button>
+      <button class="btn btn-full btn-lg" onclick="showView('create')">🗓️ Start scheduling</button>
       <button class="btn btn-outline btn-full btn-lg" onclick="showView('join')">🔑 Enter a session code</button>
     </div>
     <div class="chips-row">
@@ -919,5 +925,6 @@ window.addEventListener("resize", () => {
   resizeTimer = setTimeout(renderCurrentView, 150);
 });
 </script>
+
 </body>
 </html>

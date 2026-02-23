@@ -1,680 +1,922 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DayBalancer · Find a Time</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DayBalancer · Find a Time</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --primary: #1B6896;
-    --primary-dark: #154F74;
-    --primary-light: #E8F2F9;
-    --green: #4CAF7D;
-    --green-light: #E8F5EE;
-    --orange: #E8732A;
-    --light: #F5F7FA;
-    --border: #DCE3EA;
-    --dark: #2C3A47;
-    --muted: #6B7C8D;
-    --white: #FFFFFF;
-  }
+    :root {
+      --primary:      #1B6896;
+      --primary-dark: #154F74;
+      --green:        #2E7D52;
+      --teal:         #1A6B7A;
+      --light:        #F5F7FA;
+      --border:       #DCE3EA;
+      --dark:         #2C3A47;
+      --muted:        #5A6B7A;
+      --white:        #FFFFFF;
+      --slot-green:   #4CAF7D;
+      --slot-teal:    #2A8FA8;
+      --error:        #B91C1C;
+    }
 
-  body {
-    font-family: 'Nunito Sans', 'Segoe UI', sans-serif;
-    background: var(--light);
-    color: var(--dark);
-    min-height: 100vh;
-    -webkit-user-select: none;
-    user-select: none;
-  }
+    body {
+      font-family: 'Nunito Sans', 'Segoe UI', sans-serif;
+      background: var(--light);
+      color: var(--dark);
+      min-height: 100vh;
+      user-select: none;
+      -webkit-user-select: none;
+    }
 
-  /* HEADER */
-  .header {
-    background: var(--primary);
-    padding: 14px 28px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .logo { font-size: 22px; font-weight: 800; color: white; letter-spacing: -0.3px; }
-  .logo span { color: #ffffff; font-weight: 400; }
-  .tagline { font-size: 11px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.05em; }
-  .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    /* ── Header ── */
+    .header {
+      background: var(--primary);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo { font-size: 22px; font-weight: 800; color: white; letter-spacing: -0.3px; }
+    .logo span { font-weight: 400; color: white; }
+    .tagline { font-size: 11px; color: rgba(255,255,255,0.75); text-transform: uppercase; letter-spacing: 0.05em; }
+    .header-right { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
-  /* CARDS */
-  .card {
-    background: var(--white);
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    padding: 28px;
-  }
+    /* ── Layout ── */
+    .page { max-width: 480px; margin: 0 auto; padding: 40px 20px; }
+    .page-wide { max-width: 860px; margin: 0 auto; padding: 20px; }
+    .grid-layout { display: grid; grid-template-columns: 1fr 220px; gap: 20px; align-items: start; }
+    .results-layout { display: grid; grid-template-columns: 1fr 260px; gap: 20px; align-items: start; }
 
-  /* BUTTONS */
-  .btn {
-    display: inline-block;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 11px 22px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    font-family: inherit;
-    letter-spacing: 0.01em;
-    transition: background 0.15s, opacity 0.15s;
-    white-space: nowrap;
-  }
-  .btn:hover { background: var(--primary-dark); }
-  .btn-outline {
-    background: var(--white);
-    color: var(--dark);
-    border: 1.5px solid var(--border);
-  }
-  .btn-outline:hover { background: var(--light); }
-  .btn-green { background: var(--green); }
-  .btn-green:hover { background: #3d9e6a; }
-  .btn-full { width: 100%; }
-  .btn-sm { padding: 8px 14px; font-size: 13px; }
+    /* ── Card ── */
+    .card {
+      background: var(--white);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      padding: 24px;
+    }
+    .share-card {
+      background: var(--primary);
+      border-radius: 12px;
+      padding: 18px;
+      color: white;
+    }
+    .share-card .code-box {
+      background: white;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-align: center;
+      color: var(--dark);
+      margin: 8px 0 12px;
+    }
 
-  /* INPUTS */
-  .input {
-    width: 100%;
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    padding: 11px 16px;
-    font-size: 15px;
-    font-family: inherit;
-    color: var(--dark);
-    background: var(--white);
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .input:focus { border-color: var(--primary); }
+    /* ── Buttons ── */
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 11px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      line-height: 1;
+    }
+    .btn:hover { background: var(--primary-dark); }
+    .btn-outline { background: var(--white); color: var(--dark); border: 1.5px solid var(--border); }
+    .btn-outline:hover { background: var(--light); }
+    .btn-dark { background: var(--primary-dark); }
+    .btn-dark:hover { background: #0f3d5a; }
+    .btn-ghost { background: rgba(255,255,255,0.15); color: white; border: 1.5px solid rgba(255,255,255,0.4); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.25); }
+    .btn-full { width: 100%; display: block; text-align: center; }
+    .btn-lg { padding: 14px 20px; font-size: 15px; }
+    .btn-sm { padding: 7px 12px; font-size: 12px; }
+    .btn-disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+    .btn-disabled:hover { background: var(--border); }
+    .btn-success { background: var(--green); }
+    .btn-success:hover { background: #245f40; }
 
-  label.field-label {
-    display: block;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--muted);
-    margin-bottom: 6px;
-  }
+    /* ── Form ── */
+    .field { margin-bottom: 18px; }
+    .field-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .input {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 16px;
+      font-size: 15px;
+      font-family: inherit;
+      background: var(--white);
+      outline: none;
+      color: var(--dark);
+    }
+    .input:focus { border-color: var(--primary); }
+    .input-code { font-size: 18px; font-weight: 600; letter-spacing: 0.04em; }
+    .error-msg { color: var(--error); font-size: 14px; font-weight: 600; margin-top: 8px; display: none; }
 
-  .section-title {
-    font-size: 26px;
-    font-weight: 800;
-    color: var(--dark);
-    margin-bottom: 8px;
-  }
+    /* ── Name row ── */
+    .name-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .name-row .name-field { flex: 1 1 180px; }
 
-  /* CHIPS */
-  .chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 12px;
-    font-weight: 700;
-  }
-  .chip-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
+    /* ── Week nav ── */
+    .week-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .nav-btn {
+      width: 30px; height: 30px;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--dark);
+      flex-shrink: 0;
+    }
+    .nav-btn:hover { background: var(--light); }
+    .week-label { font-size: 13px; font-weight: 700; color: var(--dark); }
 
-  /* VIEWS */
-  .view { display: none; }
-  .view.active { display: block; }
+    /* ── Grid ── */
+    .grid-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .avail-grid {
+      display: grid;
+      gap: 2px;
+    }
+    .day-header { text-align: center; padding: 4px 2px; }
+    .day-name { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.04em; }
+    .day-num {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 2px auto 0;
+      font-size: 12px; font-weight: 700;
+      color: var(--dark);
+    }
+    .day-num.today { background: var(--primary); color: white; }
+    .time-label {
+      font-size: 10px; color: var(--muted);
+      text-align: right; padding-right: 6px;
+      line-height: 28px; white-space: nowrap;
+    }
+    .slot {
+      height: 28px;
+      border-radius: 4px;
+      background: #EEF2F6;
+      border: 1.5px solid transparent;
+      cursor: pointer;
+      transition: background 0.08s;
+    }
+    .slot.selected { background: var(--slot-green); border-color: var(--primary-dark); }
+    .slot.r0  { background: #EEEEEE; cursor: default; }
+    .slot.r1  { background: #A8D8B4; }
+    .slot.r33 { background: var(--slot-green); }
+    .slot.r66 { background: var(--slot-teal); }
+    .slot.r99 { background: var(--primary); }
 
-  /* HOME */
-  .home-body { max-width: 520px; margin: 64px auto; padding: 0 24px; }
-  .home-lead { font-size: 40px; font-weight: 800; line-height: 1.1; margin-bottom: 16px; }
-  .home-sub { color: var(--muted); font-size: 16px; line-height: 1.6; margin-bottom: 40px; }
-  .home-btns { display: flex; flex-direction: column; gap: 14px; }
-  .home-chips { margin-top: 48px; display: flex; gap: 10px; flex-wrap: wrap; }
+    /* ── Chips ── */
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--white);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 12px; font-weight: 700;
+      color: var(--dark);
+      border: 1.5px solid var(--border);
+    }
+    .chip-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+    .chips-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 24px; }
 
-  /* CREATE / JOIN */
-  .form-body { max-width: 480px; margin: 48px auto; padding: 0 24px; }
-  .back-btn { background: none; border: none; cursor: pointer; font-size: 20px; color: white; padding: 0; }
-  .error-msg { color: #E8418D; font-size: 14px; margin-top: 8px; }
+    /* ── Legend ── */
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
+    .legend-swatch { width: 13px; height: 13px; border-radius: 3px; border: 1px solid var(--border); flex-shrink: 0; }
 
-  /* GRID VIEW */
-  .grid-body { max-width: 900px; margin: 0 auto; padding: 24px; }
-  .grid-top { display: flex; gap: 12px; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; }
-  .grid-top .name-field { flex: 1; min-width: 200px; }
-  .grid-top .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
-  .grid-hint { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
-  .grid-wrap { overflow-x: auto; }
+    /* ── Responded list ── */
+    .responded-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 
-  .time-grid {
-    display: grid;
-    grid-template-columns: 56px repeat(7, 1fr);
-    gap: 2px;
-    min-width: 560px;
-  }
-  .grid-header { text-align: center; font-weight: 700; font-size: 13px; padding: 8px 0; letter-spacing: 0.04em; }
-  .time-label { font-size: 11px; color: var(--muted); text-align: right; padding-right: 8px; padding-top: 4px; line-height: 28px; }
-  .slot {
-    height: 28px;
-    border-radius: 4px;
-    background: #EEF2F6;
-    border: 1.5px solid transparent;
-    cursor: pointer;
-    transition: background 0.08s;
-  }
-  .slot.selected {
-    background: var(--green);
-    border-color: rgba(0,0,0,0.15);
-  }
-  .slot.overlap-1 { background: #C8E6C9; border-color: rgba(0,0,0,0.1); }
-  .slot.overlap-2 { background: #81C784; border-color: rgba(0,0,0,0.1); }
-  .slot.overlap-3 { background: var(--green); border-color: rgba(0,0,0,0.1); }
-  .slot.overlap-4 { background: #1B88B8; border-color: rgba(0,0,0,0.1); }
-  .slot.overlap-all { background: var(--primary); border-color: rgba(0,0,0,0.15); }
+    /* ── Best times ── */
+    .best-time-item {
+      background: var(--light);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+    .best-time-title { font-weight: 700; font-size: 13px; }
+    .best-time-names { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .progress-bar { margin-top: 6px; height: 4px; border-radius: 2px; background: #EEF2F6; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 2px; background: var(--slot-green); }
 
-  .responded-section { margin-top: 20px; }
-  .responded-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    /* ── How it works ── */
+    .how-it-works { padding: 16px; }
+    .how-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 8px; }
+    .how-list { padding-left: 18px; font-size: 13px; color: var(--muted); line-height: 1.9; }
 
-  /* RESULTS */
-  .results-body {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 24px;
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 24px;
-  }
-  @media (max-width: 700px) {
-    .results-body { grid-template-columns: 1fr; }
-  }
-  .results-title { font-size: 26px; font-weight: 800; margin-bottom: 4px; }
-  .results-sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+    /* ── Views ── */
+    .view { display: none; }
+    .view.active { display: block; }
 
-  .legend { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
-  .legend-swatch { width: 16px; height: 16px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1); }
+    /* ── Loading ── */
+    .spinner { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; }
 
-  .sidebar { display: flex; flex-direction: column; gap: 16px; }
-  .sidebar-title { font-size: 18px; font-weight: 800; margin-bottom: 14px; }
+    /* ── Hint text ── */
+    .hint { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+    .hint-green { color: var(--green); font-weight: 700; }
 
-  .best-slot {
-    margin-bottom: 10px;
-    padding: 10px 12px;
-    background: var(--light);
-    border-radius: 8px;
-    border: 1px solid var(--border);
-  }
-  .best-slot-title { font-weight: 700; font-size: 14px; }
-  .best-slot-names { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .best-slot-bar { margin-top: 6px; height: 4px; border-radius: 2px; background: #EEF2F6; overflow: hidden; }
-  .best-slot-fill { height: 100%; border-radius: 2px; background: var(--green); }
-  .best-slot-fill.full { background: var(--primary); }
+    /* ── Share card label ── */
+    .share-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.75); margin-bottom: 2px; }
+    .share-title { font-weight: 700; font-size: 14px; color: white; margin-bottom: 14px; }
+    .share-btns { display: flex; gap: 8px; }
+    .share-btns .btn { flex: 1; font-size: 13px; padding: 9px 8px; text-align: center; }
 
-  .participant-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .participant-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .participant-name { font-size: 14px; font-weight: 600; }
-  .participant-slots { font-size: 12px; color: var(--muted); margin-left: auto; }
+    /* ── Already responded ── */
+    .responded-section { margin-top: 16px; }
 
-  .share-card {
-    background: var(--primary);
-    border-radius: 12px;
-    padding: 20px;
-    border: none;
-  }
-  .share-card p { color: white; font-size: 14px; font-weight: 700; margin-bottom: 10px; }
-  .share-code {
-    background: white;
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 16px;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-align: center;
-    margin-bottom: 10px;
-    color: var(--dark);
-  }
-
-  .no-data { color: var(--muted); font-size: 14px; }
-
-  /* CODE BADGE in header */
-  .code-badge {
-    font-size: 13px;
-    font-weight: 700;
-    background: rgba(255,255,255,0.95);
-    color: var(--primary-dark);
-    border: none;
-    border-radius: 8px;
-    padding: 6px 12px;
-    cursor: pointer;
-    font-family: inherit;
-    transition: background 0.15s;
-  }
-  .code-badge:hover { background: white; }
-  .code-badge.copied { background: var(--green); color: white; }
-</style>
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .page { padding: 24px 14px; }
+      .page-wide { padding: 14px 12px; }
+      .grid-layout { grid-template-columns: 1fr; }
+      .results-layout { grid-template-columns: 1fr; }
+      .header { padding: 12px 14px; }
+      .logo { font-size: 18px; }
+      h1 { font-size: 28px !important; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- ══════════ HOME ══════════ -->
-<div id="view-home" class="view active">
-  <div class="header">
-    <div>
-      <div class="logo">Day<span>Balancer</span></div>
-      <div class="tagline">Find a time · Together</div>
-    </div>
+<!-- ── Header ─────────────────────────────────────── -->
+<div class="header">
+  <div>
+    <div class="logo">Day<span>Balancer</span></div>
+    <div class="tagline" id="header-tagline">Find a time · Together</div>
   </div>
-  <div class="home-body">
-    <h1 class="home-lead">Find a time that<br>works for everyone</h1>
-    <p class="home-sub">Create a session, share the code, and invite others to mark when they're available. Simple, fast, and clear.</p>
-    <div class="home-btns">
-      <button class="btn btn-full" style="padding:16px;font-size:16px;" onclick="showView('create')">+ Create a new session</button>
-      <button class="btn btn-outline btn-full" style="padding:16px;font-size:16px;" onclick="showView('join')">Join with a code</button>
+  <div class="header-right" id="header-actions"></div>
+</div>
+
+<!-- ── HOME ──────────────────────────────────────── -->
+<div class="view active" id="view-home">
+  <div class="page">
+    <h1 style="font-size:36px;font-weight:800;line-height:1.1;margin-bottom:14px;">
+      When works<br>for everyone?
+    </h1>
+    <p style="color:var(--muted);font-size:15px;line-height:1.6;margin-bottom:28px;">
+      Pick a meeting time without the back-and-forth. Share a code - let others mark when they're free, and you'll see the best times at a glance.
+    </p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;">
+      <button class="btn btn-full btn-lg" onclick="showView('create')">Start scheduling</button>
+      <button class="btn btn-outline btn-full btn-lg" onclick="showView('join')">🔑 Enter a session code</button>
     </div>
-    <div class="home-chips">
-      <span class="chip" style="background:#E8F2F9;border:1px solid #1B6896;color:#154F74;">No sign-up needed</span>
-      <span class="chip" style="background:#E8F5EE;border:1px solid #3d9e6a;color:#2d7a52;">Works across time zones</span>
-      <span class="chip" style="background:#FDF0E8;border:1px solid #c45e1a;color:#9a4a12;">See who's free at a glance</span>
+    <div class="chips-row">
+      <span class="chip" style="border-color:var(--primary)">No sign-up needed</span>
+      <span class="chip" style="border-color:var(--green)">Real calendar dates</span>
+      <span class="chip" style="border-color:var(--teal)">See who's free</span>
     </div>
   </div>
 </div>
 
-<!-- ══════════ CREATE ══════════ -->
-<div id="view-create" class="view">
-  <div class="header">
-    <button class="back-btn" onclick="showView('home')">←</button>
-    <div>
-      <div class="logo">Day<span>Balancer</span></div>
-    </div>
-  </div>
-  <div class="form-body">
+<!-- ── CREATE ─────────────────────────────────────── -->
+<div class="view" id="view-create">
+  <div class="page">
     <div class="card">
-      <h2 class="section-title" style="margin-bottom:24px;">Name your session</h2>
-      <div style="margin-bottom:20px;">
-        <label class="field-label">What are you scheduling?</label>
-        <input id="session-title-input" class="input" placeholder="e.g. Team check-in, Coffee chat, Sprint planning..." onkeydown="if(event.key==='Enter') createSession()">
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px;">What are you scheduling?</h2>
+      <div class="field">
+        <label class="field-label">Give it a name</label>
+        <input class="input" id="session-title-input" placeholder="e.g. Team check-in, Coffee chat, Strategy sync..." onkeydown="if(event.key==='Enter') createSession()">
       </div>
-      <button class="btn btn-full" onclick="createSession()">Create session →</button>
+      <button class="btn btn-full" onclick="createSession()">Create and get your code →</button>
     </div>
   </div>
 </div>
 
-<!-- ══════════ JOIN ══════════ -->
-<div id="view-join" class="view">
-  <div class="header">
-    <button class="back-btn" onclick="showView('home')">←</button>
-    <div><div class="logo">Day<span>Balancer</span></div></div>
-  </div>
-  <div class="form-body">
+<!-- ── JOIN ───────────────────────────────────────── -->
+<div class="view" id="view-join">
+  <div class="page">
     <div class="card">
-      <h2 class="section-title" style="margin-bottom:24px;">Join a session</h2>
-      <div style="margin-bottom:20px;">
-        <label class="field-label">Session code</label>
-        <input id="join-code-input" class="input" placeholder="e.g. oak-river-247" onkeydown="if(event.key==='Enter') joinSession()">
-        <p id="join-error" class="error-msg" style="display:none;"></p>
+      <h2 style="font-size:22px;font-weight:800;margin-bottom:8px;">Enter a session code</h2>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:20px;">
+        Someone should have sent you a code like <strong style="color:var(--dark)">oak-river-247</strong>.
+      </p>
+      <div class="field">
+        <label class="field-label">Your code</label>
+        <input class="input input-code" id="join-code-input" placeholder="oak-river-247" onkeydown="if(event.key==='Enter') joinSession()">
+        <p class="error-msg" id="join-error">We couldn't find that session. Double-check the code and try again.</p>
       </div>
-      <button class="btn btn-full" onclick="joinSession()">Join →</button>
+      <button class="btn btn-full" onclick="joinSession()">Join session →</button>
     </div>
   </div>
 </div>
 
-<!-- ══════════ ENTER AVAILABILITY ══════════ -->
-<div id="view-enter" class="view">
-  <div class="header">
-    <div>
-      <div class="logo">Day<span>Balancer</span></div>
-      <div class="tagline" id="enter-session-label"></div>
-    </div>
-    <div class="header-right">
-      <button id="enter-code-badge" class="code-badge" onclick="copyCode('enter-code-badge')"></button>
-      <button class="btn btn-sm" style="background:rgba(255,255,255,0.95);color:var(--primary-dark);" onclick="showResults()">View results</button>
-    </div>
-  </div>
-  <div class="grid-body">
-    <div class="grid-top">
-      <div class="name-field">
-        <label class="field-label">Your name</label>
-        <input id="participant-name-input" class="input" placeholder="How should we call you?">
+<!-- ── ENTER AVAILABILITY ─────────────────────────── -->
+<div class="view" id="view-enter">
+  <div class="page-wide">
+    <div class="grid-layout">
+      <!-- Left: grid -->
+      <div>
+        <div class="name-row">
+          <div class="name-field">
+            <label class="field-label">Your name</label>
+            <input class="input" id="participant-name-input" placeholder="What name do you go by?">
+          </div>
+          <button class="btn btn-dark" id="save-btn" onclick="submitAvailability()" disabled>Save my times →</button>
+          <button class="btn btn-outline" id="view-results-btn" onclick="showView('results')" style="display:none;">View results</button>
+        </div>
+        <p class="hint">Click and drag to mark when you're free. <span class="hint-green">Green = available.</span></p>
+        <div class="week-nav" id="enter-week-nav"></div>
+        <div class="grid-wrap">
+          <div class="avail-grid" id="enter-grid"></div>
+        </div>
+        <div class="responded-section" id="already-responded" style="display:none;">
+          <label class="field-label" style="margin-bottom:8px;">Already responded</label>
+          <div id="responded-chips" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+        </div>
       </div>
-      <div class="btn-row">
-        <button class="btn btn-green" onclick="submitAvailability()">Save my availability →</button>
+      <!-- Right: share card + how it works -->
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="share-card" id="enter-share-card"></div>
+        <div class="card how-it-works">
+          <p class="how-label">How it works</p>
+          <ol class="how-list">
+            <li>Enter your name above</li>
+            <li>Mark when you're free on the calendar</li>
+            <li>Click <strong style="color:var(--dark)">Save my times</strong></li>
+            <li>Share the code, so others can do the same</li>
+          </ol>
+        </div>
       </div>
-    </div>
-    <p class="grid-hint">Click and drag to mark when you're free. <strong>Green = available.</strong></p>
-    <div class="grid-wrap">
-      <div class="time-grid" id="enter-grid"></div>
-    </div>
-    <div class="responded-section" id="responded-section" style="display:none;">
-      <label class="field-label">Already responded</label>
-      <div class="responded-chips" id="responded-chips"></div>
     </div>
   </div>
 </div>
 
-<!-- ══════════ RESULTS ══════════ -->
-<div id="view-results" class="view">
-  <div class="header">
-    <div>
-      <div class="logo">Day<span>Balancer</span></div>
-      <div class="tagline" id="results-session-label"></div>
-    </div>
-    <div class="header-right">
-      <button id="results-code-badge" class="code-badge" onclick="copyCode('results-code-badge')"></button>
-      <button class="btn btn-sm" onclick="goAddAvailability()">+ Add my availability</button>
-    </div>
-  </div>
-  <div class="results-body">
-    <div>
-      <h2 class="results-title">Availability overview</h2>
-      <p class="results-sub" id="results-sub"></p>
-      <div class="grid-wrap">
-        <div class="time-grid" id="results-grid"></div>
+<!-- ── RESULTS ────────────────────────────────────── -->
+<div class="view" id="view-results">
+  <div class="page-wide">
+    <div class="results-layout">
+      <!-- Left: overview grid -->
+      <div>
+        <h2 style="font-size:24px;font-weight:800;margin-bottom:4px;">Availability overview</h2>
+        <p id="results-subtitle" style="color:var(--muted);font-size:14px;margin-bottom:12px;"></p>
+        <div class="week-nav" id="results-week-nav"></div>
+        <div class="grid-wrap">
+          <div class="avail-grid" id="results-grid"></div>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-swatch" style="background:#EEEEEE"></div> No one</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:#A8D8B4"></div> Some</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:var(--slot-green)"></div> Many</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:var(--slot-teal)"></div> Most</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:var(--primary)"></div> All</div>
+        </div>
       </div>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-swatch" style="background:#EEF2F6;"></div> No one</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:#C8E6C9;"></div> Some</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:#81C784;"></div> Many</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:var(--green);"></div> Most</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:var(--primary);"></div> Everyone</div>
-      </div>
-    </div>
-    <div class="sidebar">
-      <div class="card">
-        <div class="sidebar-title">Best times</div>
-        <div id="best-times-list"></div>
-      </div>
-      <div class="card">
-        <div class="sidebar-title">Who's responded</div>
-        <div id="participants-list"></div>
-      </div>
-      <div class="share-card">
-        <p>Invite others to share their availability</p>
-        <div class="share-code" id="share-code-display"></div>
-        <button id="share-copy-btn" class="btn btn-outline btn-full btn-sm" style="color:var(--dark);" onclick="copyCode('share-copy-btn')">Copy session code</button>
+      <!-- Right: sidebar -->
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="card" id="best-times-card">
+          <h3 style="font-size:15px;font-weight:800;margin-bottom:12px;">Best times</h3>
+          <div id="best-times-list"></div>
+        </div>
+        <div class="card" id="who-responded-card">
+          <h3 style="font-size:15px;font-weight:800;margin-bottom:12px;">Who's responded</h3>
+          <div id="who-responded-list"></div>
+        </div>
+        <div class="share-card" id="results-share-card"></div>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-// ══════════════════════════════════════════════
-// DATA
-// ══════════════════════════════════════════════
-const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-const HOURS = Array.from({length:14},(_,i)=>i+7); // 7am-8pm
-const PARTICIPANT_COLORS = [
-  "#1B6896","#4CAF7D","#E8732A","#2A8FA8",
-  "#7B68EE","#E8418D","#F5A623","#52B788","#4A90D9"
-];
+// ── Config ─────────────────────────────────────────────────
+// Replace this with your deployed Apps Script URL
+const GS_URL = "YOUR_APPS_SCRIPT_URL_HERE";
 
-let sessions = {};
-let currentCode = null;
-let selectedSlots = new Set();
-let isDragging = false;
-let dragMode = null; // "add" | "remove"
+// ── State ──────────────────────────────────────────────────
+let currentSession  = null;
+let sessionCode     = "";
+let selectedSlots   = new Set();
+let isDragging      = false;
+let dragMode        = null; // "add" | "remove"
+let weekStart       = getMondayOf(new Date());
+let currentView     = "home";
+let refreshInterval = null;
+let copied          = false;
 
-// ── Storage ──────────────────────────────────
-async function loadSessions() {
-  try {
-    if (window.storage) {
-      const r = await window.storage.get("db-findatime-sessions");
-      if (r) sessions = JSON.parse(r.value);
-    } else {
-      const s = localStorage.getItem("db-findatime-sessions");
-      if (s) sessions = JSON.parse(s);
-    }
-  } catch(e) {}
+const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7am–8pm
+const PARTICIPANT_COLORS = ["#1B6896","#2E7D52","#C05A14","#1A6B7A","#5B4FCF","#B5116A","#C07A00","#1D7A5C","#2860B0"];
+
+// ── Date helpers ───────────────────────────────────────────
+function getMondayOf(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day));
+  d.setHours(0, 0, 0, 0);
+  return d;
 }
-async function saveSessions() {
-  try {
-    const data = JSON.stringify(sessions);
-    if (window.storage) await window.storage.set("db-findatime-sessions", data);
-    else localStorage.setItem("db-findatime-sessions", data);
-  } catch(e) {}
+function addDays(date, n) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+function getWeekDates(monday) {
+  return Array.from({ length: 7 }, (_, i) => addDays(monday, i));
+}
+function dateKey(date) {
+  return date.toISOString().split("T")[0];
+}
+function slotKey(dateStr, hour) {
+  return `${dateStr}-${hour}`;
+}
+function fmtHour(h) {
+  if (h === 12) return "12 pm";
+  return h > 12 ? `${h - 12} pm` : `${h} am`;
+}
+function fmtDateRange(a, b) {
+  const opts = { month: "short", day: "numeric" };
+  return `${a.toLocaleDateString("en-US", opts)} – ${b.toLocaleDateString("en-US", opts)}`;
+}
+function fmtDayLabel(dateStr) {
+  const d = new Date(dateStr + "T12:00:00");
+  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 }
 
-// ── Helpers ──────────────────────────────────
+// ── Code generator ─────────────────────────────────────────
 function generateCode() {
-  const w = ["oak","river","bloom","sky","stone","moss","tide","grove","glow","dawn","leaf","creek"];
-  const pick = () => w[Math.floor(Math.random()*w.length)];
-  return `${pick()}-${pick()}-${Math.floor(100+Math.random()*900)}`;
+  const words = ["oak","river","bloom","sky","stone","moss","tide","grove","glow","dawn","fern","vale"];
+  const pick  = () => words[Math.floor(Math.random() * words.length)];
+  return `${pick()}-${pick()}-${Math.floor(100 + Math.random() * 900)}`;
 }
-function formatHour(h) {
-  if(h===12) return "12 pm";
-  if(h>12) return `${h-12} pm`;
-  return `${h} am`;
-}
-function slotKey(day,hour) { return `${day}-${hour}`; }
-function currentSession() { return sessions[currentCode] || null; }
 
-// ── Views ─────────────────────────────────────
+// ── JSONP API ──────────────────────────────────────────────
+function apiCall(params) {
+  return new Promise((resolve, reject) => {
+    const cbName  = "cb_" + Math.random().toString(36).slice(2);
+    const timeout = setTimeout(() => {
+      delete window[cbName];
+      script.remove();
+      reject(new Error("Request timed out"));
+    }, 12000);
+
+    window[cbName] = (data) => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      script.remove();
+      resolve(data);
+    };
+
+    const qs = Object.entries({ ...params, callback: cbName })
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(typeof v === "object" ? JSON.stringify(v) : v)}`)
+      .join("&");
+
+    const script = document.createElement("script");
+    script.src = GS_URL + "?" + qs;
+    script.onerror = () => {
+      clearTimeout(timeout);
+      delete window[cbName];
+      reject(new Error("Network error"));
+    };
+    document.head.appendChild(script);
+  });
+}
+
+async function apiGetSession(code)   { return apiCall({ action: "get",    code }); }
+async function apiSaveSession(session){ return apiCall({ action: "save",   session }); }
+
+// ── Views ──────────────────────────────────────────────────
 function showView(name) {
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById(`view-${name}`).classList.add('active');
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.getElementById("view-" + name).classList.add("active");
+  currentView = name;
+  updateHeader();
+  if (name === "enter")   { renderEnterView(); }
+  if (name === "results") { renderResultsView(); startRefresh(); }
+  else                    { stopRefresh(); }
 }
 
-// ── Create ────────────────────────────────────
-function createSession() {
-  const title = document.getElementById('session-title-input').value.trim();
+function updateHeader() {
+  const tagline = document.getElementById("header-tagline");
+  const actions = document.getElementById("header-actions");
+  tagline.textContent = currentSession ? currentSession.title : "Find a time · Together";
+
+  if (currentView === "home" || currentView === "create" || currentView === "join") {
+    actions.innerHTML = currentView !== "home"
+      ? `<button class="btn btn-outline btn-sm" onclick="showView('home')">← Back</button>` : "";
+    return;
+  }
+
+  actions.innerHTML = `
+    <button class="btn btn-outline btn-sm" id="header-copy-btn" onclick="copyCode()">📋 Code: ${sessionCode}</button>
+    ${currentView === "results" ? `<button class="btn btn-outline btn-sm" onclick="goAddMine()">+ Add mine</button>` : ""}
+  `;
+}
+
+// ── Create ─────────────────────────────────────────────────
+async function createSession() {
+  const title = document.getElementById("session-title-input").value.trim();
   if (!title) return;
-  const code = generateCode();
-  sessions[code] = { code, title, participants: [] };
-  saveSessions();
-  currentCode = code;
-  selectedSlots = new Set();
-  openEnterView();
+  const code    = generateCode();
+  const session = { code, title, participants: [], createdAt: Date.now() };
+  try {
+    await apiSaveSession(session);
+  } catch(e) {
+    // Fallback: save locally and continue - works for single device
+    console.warn("Could not save to server, using local session", e);
+  }
+  currentSession = session;
+  sessionCode    = code;
+  selectedSlots  = new Set();
+  showView("enter");
 }
 
-// ── Join ─────────────────────────────────────
-function joinSession() {
-  const code = document.getElementById('join-code-input').value.trim().toLowerCase();
-  const err = document.getElementById('join-error');
-  if (sessions[code]) {
-    currentCode = code;
-    selectedSlots = new Set();
-    err.style.display = 'none';
-    openEnterView();
+// ── Join ───────────────────────────────────────────────────
+async function joinSession() {
+  const code = document.getElementById("join-code-input").value.trim().toLowerCase();
+  if (!code) return;
+  const errEl = document.getElementById("join-error");
+  try {
+    const result = await apiGetSession(code);
+    if (result && result.session) {
+      currentSession = result.session;
+      sessionCode    = code;
+      selectedSlots  = new Set();
+      errEl.style.display = "none";
+      showView("enter");
+    } else {
+      errEl.style.display = "block";
+    }
+  } catch(e) {
+    errEl.style.display = "block";
+  }
+}
+
+// ── Submit availability ────────────────────────────────────
+async function submitAvailability() {
+  const name = document.getElementById("participant-name-input").value.trim();
+  if (!name || selectedSlots.size === 0) return;
+
+  // Reload latest to avoid overwriting concurrent submissions
+  let latest = currentSession;
+  try {
+    const r = await apiGetSession(sessionCode);
+    if (r && r.session) latest = r.session;
+  } catch {}
+
+  const participant = {
+    name,
+    slots: Array.from(selectedSlots),
+    color: PARTICIPANT_COLORS[latest.participants.length % PARTICIPANT_COLORS.length],
+  };
+  const updated = { ...latest, participants: [...latest.participants, participant] };
+  try {
+    await apiSaveSession(updated);
+  } catch {}
+  currentSession = updated;
+  showView("results");
+}
+
+function goAddMine() {
+  selectedSlots = new Set();
+  document.getElementById("participant-name-input").value = "";
+  showView("enter");
+}
+
+// ── Week nav ───────────────────────────────────────────────
+function renderWeekNav(containerId, onPrev, onNext) {
+  const el = document.getElementById(containerId);
+  const weekDates = getWeekDates(weekStart);
+  const today     = getMondayOf(new Date());
+  el.innerHTML = `
+    <button class="nav-btn" onclick="${onPrev}">‹</button>
+    <span class="week-label">${fmtDateRange(weekDates[0], weekDates[6])}</span>
+    <button class="nav-btn" onclick="${onNext}">›</button>
+    ${weekStart > today ? `<button class="btn btn-outline btn-sm" onclick="goToday()">Today</button>` : ""}
+  `;
+}
+
+function prevWeek() { weekStart = addDays(weekStart, -7); renderCurrentView(); }
+function nextWeek() { weekStart = addDays(weekStart,  7); renderCurrentView(); }
+function goToday()  { weekStart = getMondayOf(new Date()); renderCurrentView(); }
+
+function renderCurrentView() {
+  if (currentView === "enter")   renderEnterView();
+  if (currentView === "results") renderResultsView();
+}
+
+// ── Drag handling ──────────────────────────────────────────
+function handleSlotMouseDown(key) {
+  const adding = !selectedSlots.has(key);
+  dragMode = adding ? "add" : "remove";
+  isDragging = true;
+  adding ? selectedSlots.add(key) : selectedSlots.delete(key);
+  updateSlotVisual(key);
+  updateSaveBtn();
+}
+
+function handleSlotMouseEnter(key) {
+  if (!isDragging) return;
+  dragMode === "add" ? selectedSlots.add(key) : selectedSlots.delete(key);
+  updateSlotVisual(key);
+  updateSaveBtn();
+}
+
+function updateSlotVisual(key) {
+  const el = document.querySelector(`[data-key="${key}"]`);
+  if (!el) return;
+  if (selectedSlots.has(key)) {
+    el.classList.add("selected");
   } else {
-    err.textContent = "We couldn't find that session. Double-check the code.";
-    err.style.display = 'block';
+    el.classList.remove("selected");
   }
 }
 
-// ── Enter view ───────────────────────────────
-function openEnterView() {
-  const s = currentSession();
-  document.getElementById('enter-session-label').textContent = s.title;
-  document.getElementById('enter-code-badge').textContent = currentCode;
-  document.getElementById('participant-name-input').value = '';
-  buildEnterGrid();
-  updateRespondedSection();
-  showView('enter');
+document.addEventListener("mouseup",  () => { isDragging = false; });
+document.addEventListener("touchend", () => { isDragging = false; });
+
+function handleTouchMove(e) {
+  if (!isDragging) return;
+  e.preventDefault();
+  const touch = e.touches[0];
+  const el    = document.elementFromPoint(touch.clientX, touch.clientY);
+  if (el && el.dataset.key) {
+    const key = el.dataset.key;
+    dragMode === "add" ? selectedSlots.add(key) : selectedSlots.delete(key);
+    updateSlotVisual(key);
+    updateSaveBtn();
+  }
 }
 
-function buildEnterGrid() {
-  const grid = document.getElementById('enter-grid');
-  grid.innerHTML = '';
-  // Header
-  grid.appendChild(makeEl('div',''));
-  DAYS.forEach(d => {
-    const h = makeEl('div', d, 'grid-header');
-    grid.appendChild(h);
+function updateSaveBtn() {
+  const name = document.getElementById("participant-name-input")?.value.trim();
+  const btn  = document.getElementById("save-btn");
+  if (!btn) return;
+  const canSave = name && selectedSlots.size > 0;
+  btn.disabled = !canSave;
+  btn.className = "btn" + (canSave ? " btn-dark" : " btn-disabled");
+}
+
+// ── Render Enter View ──────────────────────────────────────
+function renderEnterView() {
+  const weekDates = getWeekDates(weekStart);
+  const isMobile  = window.innerWidth < 640;
+  const visible   = isMobile ? weekDates.slice(0, 4) : weekDates;
+  const cols      = visible.length;
+  const todayStr  = dateKey(new Date());
+
+  renderWeekNav("enter-week-nav", "prevWeek()", "nextWeek()");
+
+  const grid = document.getElementById("enter-grid");
+  grid.style.gridTemplateColumns = `44px repeat(${cols}, 1fr)`;
+
+  let html = '<div></div>';
+  visible.forEach(date => {
+    const dk      = dateKey(date);
+    const isToday = dk === todayStr;
+    html += `<div class="day-header">
+      <div class="day-name">${date.toLocaleDateString("en-US",{weekday:"short"})}</div>
+      <div class="day-num${isToday?" today":""}">${date.getDate()}</div>
+    </div>`;
   });
-  // Rows
+
   HOURS.forEach(h => {
-    const lbl = makeEl('div', formatHour(h), 'time-label');
-    grid.appendChild(lbl);
-    DAYS.forEach(d => {
-      const key = slotKey(d,h);
-      const cell = makeEl('div','','slot');
-      if (selectedSlots.has(key)) cell.classList.add('selected');
-      cell.addEventListener('mousedown', e => { e.preventDefault(); dragMode = !selectedSlots.has(key) ? 'add' : 'remove'; isDragging = true; toggleSlot(cell, key); });
-      cell.addEventListener('mouseenter', () => { if(isDragging) toggleSlot(cell, key); });
-      grid.appendChild(cell);
+    html += `<div class="time-label">${fmtHour(h)}</div>`;
+    visible.forEach(date => {
+      const key = slotKey(dateKey(date), h);
+      const sel = selectedSlots.has(key) ? " selected" : "";
+      html += `<div class="slot${sel}" data-key="${key}"
+        onmousedown="handleSlotMouseDown('${key}')"
+        onmouseenter="handleSlotMouseEnter('${key}')"
+        ontouchstart="isDragging=true;dragMode=!selectedSlots.has('${key}')? 'add':'remove';handleSlotMouseDown('${key}')"
+      ></div>`;
     });
   });
+
+  grid.innerHTML = html;
+  grid.addEventListener("touchmove", handleTouchMove, { passive: false });
+
+  // Name input → update save btn
+  const nameInput = document.getElementById("participant-name-input");
+  nameInput.oninput = updateSaveBtn;
+  updateSaveBtn();
+
+  // View results btn
+  const vrBtn = document.getElementById("view-results-btn");
+  if (currentSession?.participants.length > 0) {
+    vrBtn.style.display = "inline-block";
+  }
+
+  // Already responded
+  const respondedSection = document.getElementById("already-responded");
+  const respondedChips   = document.getElementById("responded-chips");
+  if (currentSession?.participants.length > 0) {
+    respondedSection.style.display = "block";
+    respondedChips.innerHTML = currentSession.participants.map(p =>
+      `<span class="chip" style="border-color:${p.color}">
+        <span class="chip-dot" style="background:${p.color}"></span>${esc(p.name)}
+      </span>`
+    ).join("");
+  }
+
+  // Share card
+  renderShareCard("enter-share-card");
 }
 
-function toggleSlot(cell, key) {
-  if (dragMode === 'add') { selectedSlots.add(key); cell.classList.add('selected'); }
-  else { selectedSlots.delete(key); cell.classList.remove('selected'); }
-}
+// ── Render Results View ────────────────────────────────────
+function renderResultsView() {
+  const overlap   = getOverlapData();
+  const total     = currentSession?.participants.length || 0;
+  const weekDates = getWeekDates(weekStart);
+  const isMobile  = window.innerWidth < 640;
+  const visible   = isMobile ? weekDates.slice(0, 4) : weekDates;
+  const cols      = visible.length;
+  const todayStr  = dateKey(new Date());
 
-function updateRespondedSection() {
-  const s = currentSession();
-  const sec = document.getElementById('responded-section');
-  const chips = document.getElementById('responded-chips');
-  if (!s || s.participants.length === 0) { sec.style.display = 'none'; return; }
-  sec.style.display = 'block';
-  chips.innerHTML = '';
-  s.participants.forEach(p => {
-    const chip = makeEl('span', `<span class="chip-dot" style="background:${p.color};"></span>${p.name}`, 'chip');
-    chip.style.cssText = `background:${p.color}18;border:1px solid ${p.color}44;color:var(--dark);`;
-    chips.appendChild(chip);
+  document.getElementById("results-subtitle").textContent =
+    `${total} ${total === 1 ? "person has" : "people have"} responded. Darker = more people free.`;
+
+  renderWeekNav("results-week-nav", "prevWeek()", "nextWeek()");
+
+  const grid = document.getElementById("results-grid");
+  grid.style.gridTemplateColumns = `44px repeat(${cols}, 1fr)`;
+
+  let html = '<div></div>';
+  visible.forEach(date => {
+    const dk      = dateKey(date);
+    const isToday = dk === todayStr;
+    html += `<div class="day-header">
+      <div class="day-name">${date.toLocaleDateString("en-US",{weekday:"short"})}</div>
+      <div class="day-num${isToday?" today":""}">${date.getDate()}</div>
+    </div>`;
   });
-}
 
-function submitAvailability() {
-  const name = document.getElementById('participant-name-input').value.trim();
-  if (!name) { document.getElementById('participant-name-input').focus(); return; }
-  const s = currentSession();
-  const color = PARTICIPANT_COLORS[s.participants.length % PARTICIPANT_COLORS.length];
-  const participant = { name, slots: Array.from(selectedSlots), color };
-  sessions[currentCode].participants.push(participant);
-  saveSessions();
-  showResults();
-}
-
-// ── Results view ─────────────────────────────
-function showResults() {
-  const s = currentSession();
-  if (!s) return;
-  document.getElementById('results-session-label').textContent = s.title;
-  document.getElementById('results-code-badge').textContent = currentCode;
-  document.getElementById('share-code-display').textContent = currentCode;
-  const total = s.participants.length;
-  document.getElementById('results-sub').textContent =
-    `${total} ${total===1?'person has':'people have'} responded. Darker = more people free.`;
-  buildResultsGrid(s);
-  buildBestTimes(s);
-  buildParticipantsList(s);
-  showView('results');
-}
-
-function buildResultsGrid(s) {
-  const grid = document.getElementById('results-grid');
-  grid.innerHTML = '';
-  const total = s.participants.length;
-  // Build overlap map
-  const map = {};
-  s.participants.forEach(p => p.slots.forEach(slot => {
-    if (!map[slot]) map[slot] = [];
-    map[slot].push(p);
-  }));
-  // Header
-  grid.appendChild(makeEl('div',''));
-  DAYS.forEach(d => grid.appendChild(makeEl('div', d, 'grid-header')));
-  // Rows
   HOURS.forEach(h => {
-    grid.appendChild(makeEl('div', formatHour(h), 'time-label'));
-    DAYS.forEach(d => {
-      const key = slotKey(d,h);
-      const ps = map[key] || [];
-      const cell = makeEl('div','','slot');
-      const ratio = total > 0 ? ps.length / total : 0;
-      if (ps.length === 0) cell.style.background = '#EEF2F6';
-      else if (ratio >= 1) { cell.style.background = 'var(--primary)'; cell.style.borderColor = 'rgba(0,0,0,0.15)'; }
-      else if (ratio >= 0.66) { cell.style.background = 'var(--green)'; cell.style.borderColor = 'rgba(0,0,0,0.1)'; }
-      else if (ratio >= 0.33) { cell.style.background = '#81C784'; cell.style.borderColor = 'rgba(0,0,0,0.1)'; }
-      else { cell.style.background = '#C8E6C9'; cell.style.borderColor = 'rgba(0,0,0,0.08)'; }
-      if (ps.length > 0) cell.title = ps.map(p=>p.name).join(', ');
-      grid.appendChild(cell);
+    html += `<div class="time-label">${fmtHour(h)}</div>`;
+    visible.forEach(date => {
+      const key   = slotKey(dateKey(date), h);
+      const ps    = overlap[key] || [];
+      const ratio = ps.length / Math.max(total, 1);
+      const cls   = ps.length === 0 ? "r0"
+        : ratio >= 0.99 ? "r99"
+        : ratio >= 0.66 ? "r66"
+        : ratio >= 0.33 ? "r33"
+        : "r1";
+      const title = ps.length > 0 ? ps.map(p => p.name).join(", ") : "";
+      html += `<div class="slot ${cls}" title="${esc(title)}"></div>`;
     });
   });
+
+  grid.innerHTML = html;
+
+  // Best times
+  const bestTimes = getBestTimes();
+  const btList    = document.getElementById("best-times-list");
+  if (bestTimes.length === 0) {
+    btList.innerHTML = `<p style="color:var(--muted);font-size:14px;">Add more responses to find overlaps.</p>`;
+  } else {
+    btList.innerHTML = bestTimes.map(([key, ps]) => {
+      const parts    = key.split("-");
+      const hour     = parseInt(parts[parts.length - 1]);
+      const datePart = parts.slice(0, 3).join("-");
+      const pct      = Math.round((ps.length / total) * 100);
+      return `<div class="best-time-item">
+        <div class="best-time-title">${fmtDayLabel(datePart)} · ${fmtHour(hour)}</div>
+        <div class="best-time-names">${ps.map(p => esc(p.name)).join(", ")} (${ps.length}/${total})</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${ps.length===total?"var(--primary)":"var(--slot-green)"}"></div></div>
+      </div>`;
+    }).join("");
+  }
+
+  // Who responded
+  const wrList = document.getElementById("who-responded-list");
+  if (total === 0) {
+    wrList.innerHTML = `<p style="color:var(--muted);font-size:14px;">No responses yet.</p>`;
+  } else {
+    wrList.innerHTML = currentSession.participants.map(p =>
+      `<div class="responded-row">
+        <div style="width:9px;height:9px;border-radius:50%;background:${p.color};flex-shrink:0;"></div>
+        <span style="font-size:14px;font-weight:500;">${esc(p.name)}</span>
+        <span style="font-size:12px;color:var(--muted);margin-left:auto;">${p.slots.length} slots</span>
+      </div>`
+    ).join("");
+  }
+
+  renderShareCard("results-share-card");
+  updateHeader();
 }
 
-function buildBestTimes(s) {
-  const list = document.getElementById('best-times-list');
-  list.innerHTML = '';
-  const total = s.participants.length;
-  if (total === 0) { list.innerHTML = '<p class="no-data">Add more people to find overlaps.</p>'; return; }
-  const map = {};
-  s.participants.forEach(p => p.slots.forEach(slot => {
-    if (!map[slot]) map[slot] = [];
-    map[slot].push(p);
-  }));
-  const sorted = Object.entries(map)
-    .filter(([,ps]) => ps.length > 1)
-    .sort((a,b) => b[1].length - a[1].length)
-    .slice(0,5);
-  if (sorted.length === 0) { list.innerHTML = '<p class="no-data">No shared availability yet.</p>'; return; }
-  sorted.forEach(([key, ps]) => {
-    const [day, hour] = key.split('-');
-    const div = document.createElement('div');
-    div.className = 'best-slot';
-    const pct = Math.round((ps.length/total)*100);
-    div.innerHTML = `
-      <div class="best-slot-title">${day} · ${formatHour(parseInt(hour))}</div>
-      <div class="best-slot-names">${ps.map(p=>p.name).join(', ')} (${ps.length}/${total})</div>
-      <div class="best-slot-bar"><div class="best-slot-fill ${ps.length===total?'full':''}" style="width:${pct}%;"></div></div>`;
-    list.appendChild(div);
-  });
+// ── Share card ─────────────────────────────────────────────
+function renderShareCard(containerId) {
+  const el = document.getElementById(containerId);
+  if (!el || !currentSession) return;
+  el.innerHTML = `
+    <p class="share-label">Session</p>
+    <p class="share-title">${esc(currentSession.title)}</p>
+    <p class="share-label">Share this code</p>
+    <div class="code-box">${sessionCode}</div>
+    <div class="share-btns">
+      <button class="btn btn-outline" id="${containerId}-copy" onclick="copyCode('${containerId}-copy')">📋 Copy code</button>
+      <button class="btn btn-ghost" onclick="shareInvite()">⬆️ Share invite</button>
+    </div>
+  `;
 }
 
-function buildParticipantsList(s) {
-  const list = document.getElementById('participants-list');
-  list.innerHTML = '';
-  if (s.participants.length === 0) { list.innerHTML = '<p class="no-data">No responses yet.</p>'; return; }
-  s.participants.forEach(p => {
-    const row = document.createElement('div');
-    row.className = 'participant-row';
-    row.innerHTML = `<div class="participant-dot" style="background:${p.color};"></div><span class="participant-name">${p.name}</span><span class="participant-slots">${p.slots.length} slots</span>`;
-    list.appendChild(row);
-  });
-}
-
-function goAddAvailability() {
-  selectedSlots = new Set();
-  openEnterView();
-}
-
-// ── Copy code ─────────────────────────────────
 function copyCode(btnId) {
-  const btn = document.getElementById(btnId);
-  navigator.clipboard.writeText(currentCode).catch(()=>{});
-  const orig = btn.textContent;
-  btn.textContent = '✓ Copied!';
-  btn.classList.add('copied');
-  setTimeout(() => { btn.textContent = btnId === 'share-copy-btn' ? 'Copy session code' : currentCode; btn.classList.remove('copied'); }, 2000);
-}
-
-// ── Util ──────────────────────────────────────
-function makeEl(tag, html, cls) {
-  const el = document.createElement(tag);
-  if (cls) el.className = cls;
-  el.innerHTML = html;
-  return el;
-}
-
-// ── Global mouse up ───────────────────────────
-document.addEventListener('mouseup', () => isDragging = false);
-
-// ── Init ──────────────────────────────────────
-loadSessions().then(() => {
-  // Check URL hash for direct session link
-  const hash = location.hash.replace('#','');
-  if (hash && sessions[hash]) {
-    currentCode = hash;
-    selectedSlots = new Set();
-    openEnterView();
+  navigator.clipboard.writeText(sessionCode).catch(() => {});
+  const btn = document.getElementById(btnId || "header-copy-btn");
+  if (btn) {
+    const orig = btn.textContent;
+    btn.textContent = "✓ Copied!";
+    setTimeout(() => { btn.textContent = orig; }, 2000);
   }
+}
+
+function shareInvite() {
+  const text = `📅 ${currentSession?.title || "Find a time"}\n\nJoin and mark your availability - use this code:\n${sessionCode}`;
+  if (navigator.share) {
+    navigator.share({ title: currentSession?.title, text }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text).catch(() => {});
+    alert("Invite copied to clipboard!\n\n" + text);
+  }
+}
+
+// ── Overlap + best times ───────────────────────────────────
+function getOverlapData() {
+  if (!currentSession) return {};
+  const map = {};
+  currentSession.participants.forEach(p => {
+    p.slots.forEach(slot => {
+      if (!map[slot]) map[slot] = [];
+      map[slot].push(p);
+    });
+  });
+  return map;
+}
+
+function getBestTimes() {
+  const overlap = getOverlapData();
+  const total   = currentSession?.participants.length || 0;
+  if (total === 0) return [];
+  return Object.entries(overlap)
+    .sort((a, b) => b[1].length - a[1].length)
+    .filter(([, ps]) => ps.length > 1)
+    .slice(0, 5);
+}
+
+// ── Auto-refresh ───────────────────────────────────────────
+function startRefresh() {
+  stopRefresh();
+  refreshInterval = setInterval(async () => {
+    if (!sessionCode) return;
+    try {
+      const r = await apiGetSession(sessionCode);
+      if (r && r.session) {
+        currentSession = r.session;
+        renderResultsView();
+      }
+    } catch {}
+  }, 20000);
+}
+
+function stopRefresh() {
+  if (refreshInterval) clearInterval(refreshInterval);
+  refreshInterval = null;
+}
+
+// ── Util ───────────────────────────────────────────────────
+function esc(str) {
+  return String(str || "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;");
+}
+
+// Responsive: re-render on resize
+let resizeTimer;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(renderCurrentView, 150);
 });
 </script>
 </body>

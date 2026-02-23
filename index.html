@@ -1,10 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <!--
   Find a Time · A free scheduling tool
   Brought to you by DayBalancer LLC
   https://daybalancer.com
+  Version 1.4
 -->
 <head>
   <meta charset="UTF-8">
@@ -345,7 +345,8 @@
         <div class="name-row">
           <div class="name-field">
             <label class="field-label">Your name</label>
-            <input class="input" id="participant-name-input" placeholder="What name do you go by?">
+            <input class="input" id="participant-name-input" placeholder="What name do you go by?" oninput="onNameInput()">
+            <p id="edit-hint" style="display:none;font-size:12px;color:var(--green);font-weight:700;margin-top:5px;">✏️ We found your previous entry - update your times and save again.</p>
           </div>
           <button class="btn btn-dark" id="save-btn" onclick="submitAvailability()" disabled>Save my times →</button>
           <button class="btn btn-outline" id="view-results-btn" onclick="showView('results')" style="display:none;">View results</button>
@@ -406,6 +407,7 @@
         <div class="card" id="who-responded-card">
           <h3 style="font-size:15px;font-weight:800;margin-bottom:12px;">Who's responded</h3>
           <div id="who-responded-list"></div>
+          <button class="btn btn-outline" style="width:100%;margin-top:12px;font-size:13px;" onclick="goAddMine()">✏️ Edit my times</button>
         </div>
         <div class="share-card" id="results-share-card"></div>
       </div>
@@ -511,6 +513,7 @@ async function apiSaveSession(session){ return apiCall({ action: "save",   sessi
 
 // ── Views ──────────────────────────────────────────────────
 function showView(name) {
+  isSubmitting = false;
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
   document.getElementById("view-" + name).classList.add("active");
   currentView = name;
@@ -577,34 +580,100 @@ async function joinSession() {
 }
 
 // ── Submit availability ────────────────────────────────────
+let isSubmitting = false;
+
 async function submitAvailability() {
+  if (isSubmitting) return;
   const name = document.getElementById("participant-name-input").value.trim();
   if (!name || selectedSlots.size === 0) return;
 
-  // Reload latest to avoid overwriting concurrent submissions
-  let latest = currentSession;
-  try {
-    const r = await apiGetSession(sessionCode);
-    if (r && r.session) latest = r.session;
-  } catch {}
+  isSubmitting = true;
+  const btn = document.getElementById("save-btn");
+  if (btn) { btn.disabled = true; btn.className = "btn btn-disabled"; btn.textContent = "Saved ✓"; }
 
-  const participant = {
-    name,
-    slots: Array.from(selectedSlots),
-    color: PARTICIPANT_COLORS[latest.participants.length % PARTICIPANT_COLORS.length],
-  };
-  const updated = { ...latest, participants: [...latest.participants, participant] };
-  try {
-    await apiSaveSession(updated);
-  } catch {}
+  // Build updated session locally first
+  const latest = currentSession;
+  const existingIndex = latest.participants.findIndex(
+    p => p.name.toLowerCase() === name.toLowerCase()
+  );
+
+  let participants;
+  if (existingIndex >= 0) {
+    participants = latest.participants.map((p, i) =>
+      i === existingIndex ? { ...p, slots: Array.from(selectedSlots) } : p
+    );
+  } else {
+    const newP = {
+      name,
+      slots: Array.from(selectedSlots),
+      color: PARTICIPANT_COLORS[latest.participants.length % PARTICIPANT_COLORS.length],
+    };
+    participants = [...latest.participants, newP];
+  }
+
+  const updated = { ...latest, participants };
+
+  // Show results immediately with local data
   currentSession = updated;
   showView("results");
+
+  // Save to server in background - no await blocking the UI
+  apiGetSession(sessionCode)
+    .then(r => r && r.session ? r.session : latest)
+    .catch(() => latest)
+    .then(serverLatest => {
+      // Re-apply this person's submission on top of latest server state
+      const idx = serverLatest.participants.findIndex(
+        p => p.name.toLowerCase() === name.toLowerCase()
+      );
+      let serverParticipants;
+      if (idx >= 0) {
+        serverParticipants = serverLatest.participants.map((p, i) =>
+          i === idx ? { ...p, slots: Array.from(selectedSlots) } : p
+        );
+      } else {
+        serverParticipants = [...serverLatest.participants, {
+          name,
+          slots: Array.from(selectedSlots),
+          color: PARTICIPANT_COLORS[serverLatest.participants.length % PARTICIPANT_COLORS.length],
+        }];
+      }
+      const serverUpdated = { ...serverLatest, participants: serverParticipants };
+      return apiSaveSession(serverUpdated).then(() => serverUpdated);
+    })
+    .then(saved => {
+      // Quietly update with authoritative server version
+      currentSession = saved;
+      if (currentView === "results") renderResultsView();
+    })
+    .catch(() => {})
+    .finally(() => { isSubmitting = false; });
 }
 
 function goAddMine() {
   selectedSlots = new Set();
+  isSubmitting  = false;
   document.getElementById("participant-name-input").value = "";
   showView("enter");
+}
+
+// Load existing slots when name is typed and matches a previous entry
+function onNameInput() {
+  updateSaveBtn();
+  const name = document.getElementById("participant-name-input").value.trim().toLowerCase();
+  if (!name || !currentSession) return;
+  const existing = currentSession.participants.find(p => p.name.toLowerCase() === name);
+  if (existing) {
+    // Pre-fill their previous slots so they can edit
+    selectedSlots = new Set(existing.slots);
+    renderEnterView(); // re-render grid with slots pre-selected
+    document.getElementById("participant-name-input").value = existing.name; // restore name after re-render
+    const hint = document.getElementById("edit-hint");
+    if (hint) hint.style.display = "block";
+  } else {
+    const hint = document.getElementById("edit-hint");
+    if (hint) hint.style.display = "none";
+  }
 }
 
 // ── Week nav ───────────────────────────────────────────────
@@ -720,9 +789,6 @@ function renderEnterView() {
   grid.innerHTML = html;
   grid.addEventListener("touchmove", handleTouchMove, { passive: false });
 
-  // Name input → update save btn
-  const nameInput = document.getElementById("participant-name-input");
-  nameInput.oninput = updateSaveBtn;
   updateSaveBtn();
 
   // View results btn

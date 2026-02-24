@@ -4,7 +4,7 @@
   Find a Time · A free scheduling tool
   Brought to you by DayBalancer LLC
   https://daybalancer.com
-  Version 1.4
+  Version 1.5
 -->
 <head>
   <meta charset="UTF-8">
@@ -277,7 +277,7 @@
 <!-- ── Header ─────────────────────────────────────── -->
 <div class="header">
   <div>
-    <div class="logo">Day<span>Balancer</span></div>
+    <div class="logo" onclick="showView('home')" style="cursor:pointer;">Day<span>Balancer</span></div>
     <div class="tagline" id="header-tagline">Find a time · Together</div>
   </div>
   <div class="header-right" id="header-actions"></div>
@@ -514,6 +514,14 @@ async function apiSaveSession(session){ return apiCall({ action: "save",   sessi
 // ── Views ──────────────────────────────────────────────────
 function showView(name) {
   isSubmitting = false;
+  if (name === "home") {
+    currentSession = null;
+    sessionCode    = "";
+    selectedSlots  = new Set();
+    document.getElementById("session-title-input").value = "";
+    document.getElementById("join-code-input").value     = "";
+    document.getElementById("join-error").style.display  = "none";
+  }
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
   document.getElementById("view-" + name).classList.add("active");
   currentView = name;
@@ -536,6 +544,7 @@ function updateHeader() {
 
   actions.innerHTML = `
     <button class="btn btn-outline btn-sm" id="header-copy-btn" onclick="copyCode()">📋 Code: ${sessionCode}</button>
+    <button class="btn btn-outline btn-sm" onclick="showView('home')" title="Start a new session">+ New session</button>
     ${currentView === "results" ? `<button class="btn btn-outline btn-sm" onclick="goAddMine()">+ Add mine</button>` : ""}
   `;
 }

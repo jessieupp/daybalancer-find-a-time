@@ -1,1005 +1,823 @@
 <!DOCTYPE html>
 <html lang="en">
 <!--
-  Find a Time · A free scheduling tool
+  When to Meet · A simple event timing vote
   Brought to you by DayBalancer LLC
   https://daybalancer.com
-  Version 1.5
+  Version 2.2
 -->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DayBalancer · Find a Time</title>
+  <title>DayBalancer · When to Meet</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
       --primary:      #1B6896;
       --primary-dark: #154F74;
       --green:        #2E7D52;
-      --teal:         #1A6B7A;
+      --green-light:  #E8F5EE;
       --light:        #F5F7FA;
       --border:       #DCE3EA;
       --dark:         #2C3A47;
       --muted:        #5A6B7A;
       --white:        #FFFFFF;
-      --slot-green:   #4CAF7D;
-      --slot-teal:    #2A8FA8;
       --error:        #B91C1C;
+      --gold:         #C07A00;
+      --gold-light:   #FFF9EC;
     }
+    body { font-family: "Nunito Sans", sans-serif; background: var(--light); color: var(--dark); min-height: 100vh; }
 
-    body {
-      font-family: 'Nunito Sans', 'Segoe UI', sans-serif;
-      background: var(--light);
-      color: var(--dark);
-      min-height: 100vh;
-      user-select: none;
-      -webkit-user-select: none;
-    }
+    /* Header */
+    .header { background: var(--primary-dark); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .logo { font-size: 20px; font-weight: 800; color: white; letter-spacing: -0.3px; }
+    .logo span { font-weight: 400; }
+    .header-tag { font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.07em; }
+    .code-badge { background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 5px 12px; font-size: 12px; font-weight: 700; color: white; cursor: pointer; white-space: nowrap; }
+    .code-badge:hover { background: rgba(255,255,255,0.25); }
 
-    /* ── Header ── */
-    .header {
-      background: var(--primary);
-      padding: 14px 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .logo { font-size: 22px; font-weight: 800; color: white; letter-spacing: -0.3px; }
-    .logo span { font-weight: 400; color: white; }
-    .tagline { font-size: 11px; color: rgba(255,255,255,0.75); text-transform: uppercase; letter-spacing: 0.05em; }
-    .header-right { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    /* Layout */
+    .page { max-width: 560px; margin: 0 auto; padding: 24px 16px 80px; }
 
-    /* ── Layout ── */
-    .page { max-width: 480px; margin: 0 auto; padding: 40px 20px; }
-    .page-wide { max-width: 860px; margin: 0 auto; padding: 20px; }
-    .grid-layout { display: grid; grid-template-columns: 1fr 220px; gap: 20px; align-items: start; }
-    .results-layout { display: grid; grid-template-columns: 1fr 260px; gap: 20px; align-items: start; }
+    /* Cards */
+    .card { background: var(--white); border-radius: 14px; border: 1.5px solid var(--border); padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
 
-    /* ── Card ── */
-    .card {
-      background: var(--white);
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      padding: 24px;
-    }
-    .share-card {
-      background: var(--primary);
-      border-radius: 12px;
-      padding: 18px;
-      color: white;
-    }
-    .share-card .code-box {
-      background: white;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-align: center;
-      color: var(--dark);
-      margin: 8px 0 12px;
-    }
-
-    /* ── Buttons ── */
-    .btn {
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 11px 20px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: inherit;
-      white-space: nowrap;
-      line-height: 1;
-    }
-    .btn:hover { background: var(--primary-dark); }
-    .btn-outline { background: var(--white); color: var(--dark); border: 1.5px solid var(--border); }
-    .btn-outline:hover { background: var(--light); }
-    .btn-dark { background: var(--primary-dark); }
-    .btn-dark:hover { background: #0f3d5a; }
-    .btn-ghost { background: rgba(255,255,255,0.15); color: white; border: 1.5px solid rgba(255,255,255,0.4); }
-    .btn-ghost:hover { background: rgba(255,255,255,0.25); }
-    .btn-full { width: 100%; display: block; text-align: center; }
-    .btn-lg { padding: 14px 20px; font-size: 15px; }
-    .btn-sm { padding: 7px 12px; font-size: 12px; }
-    .btn-disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
-    .btn-disabled:hover { background: var(--border); }
-    .btn-success { background: var(--green); }
-    .btn-success:hover { background: #245f40; }
-
-    /* ── Form ── */
+    /* Inputs */
     .field { margin-bottom: 18px; }
-    .field-label {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-    .input {
-      width: 100%;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      padding: 11px 16px;
-      font-size: 15px;
-      font-family: inherit;
-      background: var(--white);
-      outline: none;
-      color: var(--dark);
-    }
+    .field-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 6px; display: block; }
+    .opt-label { font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 11px; }
+    .input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 15px; color: var(--dark); background: var(--white); outline: none; transition: border-color .15s; }
     .input:focus { border-color: var(--primary); }
-    .input-code { font-size: 18px; font-weight: 600; letter-spacing: 0.04em; }
-    .error-msg { color: var(--error); font-size: 14px; font-weight: 600; margin-top: 8px; display: none; }
+    .input-lg { font-size: 18px; font-weight: 700; padding: 14px 16px; }
 
-    /* ── Name row ── */
-    .name-row {
-      display: flex;
-      gap: 10px;
-      align-items: flex-end;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-    }
-    .name-row .name-field { flex: 1 1 180px; }
+    /* Name hero */
+    .name-hero { background: var(--primary-dark); border-radius: 14px; padding: 20px; margin-bottom: 14px; }
+    .name-hero .field-label { color: rgba(255,255,255,0.7); margin-bottom: 8px; }
+    .name-hero .input-lg { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25); color: white; }
+    .name-hero .input-lg::placeholder { color: rgba(255,255,255,0.4); }
+    .name-hero .input-lg:focus { border-color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.2); }
+    .name-hero .err { color: rgba(255,160,160,1); }
 
-    /* ── Week nav ── */
-    .week-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-    .nav-btn {
-      width: 30px; height: 30px;
-      background: var(--white);
-      border: 1.5px solid var(--border);
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--dark);
-      flex-shrink: 0;
-    }
-    .nav-btn:hover { background: var(--light); }
-    .week-label { font-size: 13px; font-weight: 700; color: var(--dark); }
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 22px; border-radius: 10px; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; border: none; transition: all .15s; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-green  { background: var(--green); color: white; }
+    .btn-green:hover { background: #256641; }
+    .btn-outline { background: var(--white); color: var(--dark); border: 1.5px solid var(--border); }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-ghost  { background: rgba(255,255,255,0.15); color: white; border: 1.5px solid rgba(255,255,255,0.35); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.25); }
+    .btn-disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+    .btn-full   { width: 100%; }
+    .btn-sm     { padding: 7px 14px; font-size: 13px; border-radius: 8px; }
 
-    /* ── Grid ── */
-    .grid-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .avail-grid {
-      display: grid;
-      gap: 2px;
-    }
-    .day-header { text-align: center; padding: 4px 2px; }
-    .day-name { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.04em; }
-    .day-num {
-      width: 26px; height: 26px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      margin: 2px auto 0;
-      font-size: 12px; font-weight: 700;
-      color: var(--dark);
-    }
-    .day-num.today { background: var(--primary); color: white; }
-    .time-label {
-      font-size: 10px; color: var(--muted);
-      text-align: right; padding-right: 6px;
-      line-height: 28px; white-space: nowrap;
-    }
-    .slot {
-      height: 28px;
-      border-radius: 4px;
-      background: #EEF2F6;
-      border: 1.5px solid transparent;
-      cursor: pointer;
-      transition: background 0.08s;
-    }
-    .slot.selected { background: var(--slot-green); border-color: var(--primary-dark); }
-    .slot.r0  { background: #EEEEEE; cursor: default; }
-    .slot.r1  { background: #A8D8B4; }
-    .slot.r33 { background: var(--slot-green); }
-    .slot.r66 { background: var(--slot-teal); }
-    .slot.r99 { background: var(--primary); }
+    /* Toggles */
+    .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tog { padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border); font-size: 13px; font-weight: 700; cursor: pointer; background: var(--white); color: var(--muted); transition: all .15s; font-family: inherit; }
+    .tog.on { background: var(--primary-dark); border-color: var(--primary-dark); color: white; }
+    .tog:hover:not(.on) { border-color: var(--primary); color: var(--primary); }
 
-    /* ── Chips ── */
-    .chip {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: var(--white);
-      border-radius: 20px;
-      padding: 4px 12px;
-      font-size: 12px; font-weight: 700;
-      color: var(--dark);
-      border: 1.5px solid var(--border);
-    }
-    .chip-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
-    .chips-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 24px; }
+    /* Duration row */
+    .dur-row { display: flex; gap: 8px; }
+    .dur-row select { flex: 1; padding: 11px 10px; border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 14px; color: var(--dark); background: var(--white); outline: none; cursor: pointer; }
+    .dur-row select:focus { border-color: var(--primary); }
 
-    /* ── Legend ── */
-    .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; }
-    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
-    .legend-swatch { width: 13px; height: 13px; border-radius: 3px; border: 1px solid var(--border); flex-shrink: 0; }
+    /* Specific option rows */
+    .sopt-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .remove-btn { width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--white); color: var(--muted); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: inherit; transition: all .15s; }
+    .remove-btn:hover { border-color: var(--error); color: var(--error); }
 
-    /* ── Responded list ── */
-    .responded-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    /* Generated preview */
+    .gen-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--light); border-radius: 10px; margin-bottom: 6px; border: 1.5px solid var(--border); }
+    .gen-row .g-label { font-size: 14px; font-weight: 700; }
 
-    /* ── Best times ── */
-    .best-time-item {
-      background: var(--light);
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      padding: 10px 12px;
-      margin-bottom: 10px;
-    }
-    .best-time-title { font-weight: 700; font-size: 13px; }
-    .best-time-names { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .progress-bar { margin-top: 6px; height: 4px; border-radius: 2px; background: #EEF2F6; overflow: hidden; }
-    .progress-fill { height: 100%; border-radius: 2px; background: var(--slot-green); }
+    /* Vote cards */
+    .vote-card { border-radius: 14px; border: 2.5px solid var(--border); padding: 14px 16px; margin-bottom: 10px; cursor: pointer; transition: all .15s; background: var(--white); display: flex; align-items: center; gap: 12px; }
+    .vote-card:active { transform: scale(0.99); }
+    .vote-card:hover  { border-color: var(--primary); box-shadow: 0 4px 14px rgba(27,104,150,.12); }
+    .vote-card.picked { border-color: var(--green); background: var(--green-light); }
+    .vote-card.is-winner { border-color: var(--gold); background: var(--gold-light); cursor: default; }
+    .vote-check { width: 28px; height: 28px; border-radius: 50%; border: 2.5px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; transition: all .15s; }
+    .vote-card.picked   .vote-check { background: var(--green); border-color: var(--green); color: white; }
+    .vote-card.is-winner .vote-check { background: var(--gold); border-color: var(--gold); color: white; font-size: 13px; }
+    .vote-body  { flex: 1; min-width: 0; }
+    .vote-day   { font-size: 17px; font-weight: 800; }
+    .vote-names { font-size: 11px; color: var(--muted); margin-top: 3px; }
+    .bar-wrap   { height: 4px; background: var(--border); border-radius: 2px; margin-top: 7px; overflow: hidden; }
+    .bar-fill   { height: 100%; border-radius: 2px; background: var(--primary); transition: width .4s; }
+    .vote-card.picked .bar-fill { background: var(--green); }
+    .vote-card.is-winner .bar-fill { background: var(--gold); }
+    .vote-count { text-align: right; flex-shrink: 0; }
+    .vote-num   { font-size: 22px; font-weight: 800; color: var(--primary); line-height: 1; }
+    .vote-card.picked .vote-num { color: var(--green); }
+    .vote-card.is-winner .vote-num { color: var(--gold); }
+    .vote-lbl   { font-size: 11px; color: var(--muted); font-weight: 600; }
 
-    /* ── How it works ── */
-    .how-it-works { padding: 16px; }
-    .how-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 8px; }
-    .how-list { padding-left: 18px; font-size: 13px; color: var(--muted); line-height: 1.9; }
+    /* Winner banner */
+    .winner-banner { background: linear-gradient(135deg, #C07A00, #E8A000); border-radius: 14px; padding: 22px; text-align: center; margin-bottom: 14px; }
+    .w-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.8); margin-bottom: 6px; }
+    .w-date  { font-size: 24px; font-weight: 800; color: white; }
+    .w-sub   { font-size: 14px; color: rgba(255,255,255,0.85); margin-top: 4px; }
 
-    /* ── Views ── */
+    /* Suggest */
+    .suggest-wrap { border-radius: 14px; border: 2px dashed var(--border); padding: 14px 16px; margin-bottom: 10px; cursor: pointer; text-align: center; color: var(--muted); font-weight: 700; font-size: 14px; background: var(--white); transition: all .15s; }
+    .suggest-wrap:hover { border-color: var(--primary); color: var(--primary); }
+    .suggest-form { padding: 14px; background: var(--light); border-radius: 10px; margin-top: 8px; display: none; }
+    .suggest-form.open { display: block; }
+
+    /* Who voted */
+    .voter-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .voter-row:last-child { border-bottom: none; }
+    .voter-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Misc */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+    .sec-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 10px; }
+    .err { font-size: 13px; font-weight: 600; color: var(--error); margin-top: 6px; display: none; }
+    .bottom-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+
+    /* Views */
     .view { display: none; }
     .view.active { display: block; }
 
-    /* ── Loading ── */
-    .spinner { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; }
-
-    /* ── Hint text ── */
-    .hint { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
-    .hint-green { color: var(--green); font-weight: 700; }
-
-    /* ── Share card label ── */
-    .share-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.75); margin-bottom: 2px; }
-    .share-title { font-weight: 700; font-size: 14px; color: white; margin-bottom: 14px; }
-    .share-btns { display: flex; gap: 8px; }
-    .share-btns .btn { flex: 1; font-size: 13px; padding: 9px 8px; text-align: center; }
-
-    /* ── Already responded ── */
-    .responded-section { margin-top: 16px; }
-
-    /* ── Responsive ── */
-    @media (max-width: 640px) {
-      .page { padding: 24px 14px; }
-      .page-wide { padding: 14px 12px; }
-      .grid-layout { grid-template-columns: 1fr; }
-      .results-layout { grid-template-columns: 1fr; }
-      .header { padding: 12px 14px; }
-      .logo { font-size: 18px; }
-      h1 { font-size: 28px !important; }
+    @media (max-width: 420px) {
+      .vote-day { font-size: 15px; }
+      .vote-num { font-size: 19px; }
+      .card { padding: 16px 14px; }
     }
   </style>
 </head>
 <body>
 
-<!-- ── Header ─────────────────────────────────────── -->
 <div class="header">
   <div>
-    <div class="logo" onclick="showView('home')" style="cursor:pointer;">Day<span>Balancer</span></div>
-    <div class="tagline" id="header-tagline">Find a time · Together</div>
+    <div class="logo">Day<span>Balancer</span></div>
+    <div class="header-tag">When to Meet</div>
   </div>
-  <div class="header-right" id="header-actions"></div>
-</div>
-
-<!-- ── HOME ──────────────────────────────────────── -->
-<div class="view active" id="view-home">
-  <div class="page">
-    <h1 style="font-size:36px;font-weight:800;line-height:1.1;margin-bottom:14px;">
-      When works<br>for everyone?
-    </h1>
-    <p style="color:var(--muted);font-size:15px;line-height:1.6;margin-bottom:28px;">
-      Pick a meeting time without the back-and-forth. Share a code - let others mark when they're free, and you'll see the best times at a glance.
-    </p>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px;">
-      <button class="btn btn-full btn-lg" onclick="showView('create')">🗓️ Start scheduling</button>
-      <button class="btn btn-outline btn-full btn-lg" onclick="showView('join')">🔑 Enter a session code</button>
-    </div>
-    <div class="chips-row">
-      <span class="chip" style="border-color:var(--primary)">No sign-up needed</span>
-      <span class="chip" style="border-color:var(--green)">Real calendar dates</span>
-      <span class="chip" style="border-color:var(--teal)">See who's free</span>
-    </div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <div class="code-badge" id="header-code" style="display:none;" onclick="copyCode()">📋 Copy code</div>
+    <button class="btn btn-ghost btn-sm" onclick="resetToHome()">+ New</button>
   </div>
 </div>
 
-<!-- ── CREATE ─────────────────────────────────────── -->
-<div class="view" id="view-create">
-  <div class="page">
+<div class="page">
+
+  <!-- HOME -->
+  <div class="view active" id="view-home">
+    <div class="card" style="text-align:center;padding:36px 24px;">
+      <div style="font-size:40px;margin-bottom:12px;">📅</div>
+      <div style="font-size:24px;font-weight:800;margin-bottom:8px;">When to Meet</div>
+      <p style="color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:28px;">Propose a few times, share with your crew,<br>vote on the winner in seconds.</p>
+      <button class="btn btn-primary btn-full" style="margin-bottom:10px;padding:14px;" onclick="showView('setup')">🗓 Find a time</button>
+      <button class="btn btn-outline btn-full" style="padding:14px;" onclick="showView('join')">⊞ I have a code</button>
+    </div>
+  </div>
+
+  <!-- JOIN -->
+  <div class="view" id="view-join">
     <div class="card">
-      <h2 style="font-size:22px;font-weight:800;margin-bottom:20px;">What are you scheduling?</h2>
+      <div style="font-size:20px;font-weight:800;margin-bottom:6px;">Join a vote</div>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:20px;">Someone should have shared a code with you - something like <strong style="color:var(--dark);">oak-river-42</strong></p>
       <div class="field">
-        <label class="field-label">Give it a name</label>
-        <input class="input" id="session-title-input" placeholder="e.g. Team check-in, Coffee chat, Strategy sync..." onkeydown="if(event.key==='Enter') createSession()">
+        <label class="field-label">Code</label>
+        <input class="input input-lg" id="join-code" placeholder="Enter code..." autocapitalize="none" spellcheck="false">
+        <div class="err" id="join-err">Code not found. Double-check and try again.</div>
       </div>
-      <button class="btn btn-full" onclick="createSession()">Create and get your code →</button>
+      <button class="btn btn-primary btn-full" onclick="joinSession()" style="margin-bottom:10px;">Join →</button>
+      <button class="btn btn-outline btn-sm" onclick="showView('home')">← Back</button>
     </div>
   </div>
-</div>
 
-<!-- ── JOIN ───────────────────────────────────────── -->
-<div class="view" id="view-join">
-  <div class="page">
+  <!-- SETUP -->
+  <div class="view" id="view-setup">
     <div class="card">
-      <h2 style="font-size:22px;font-weight:800;margin-bottom:8px;">Enter a session code</h2>
-      <p style="color:var(--muted);font-size:14px;margin-bottom:20px;">
-        Someone should have sent you a code like <strong style="color:var(--dark)">oak-river-247</strong>.
-      </p>
-      <div class="field">
-        <label class="field-label">Your code</label>
-        <input class="input input-code" id="join-code-input" placeholder="oak-river-247" onkeydown="if(event.key==='Enter') joinSession()">
-        <p class="error-msg" id="join-error">We couldn't find that session. Double-check the code and try again.</p>
-      </div>
-      <button class="btn btn-full" onclick="joinSession()">Join session →</button>
-    </div>
-  </div>
-</div>
+      <div style="font-size:18px;font-weight:800;margin-bottom:20px;">Create a vote</div>
 
-<!-- ── ENTER AVAILABILITY ─────────────────────────── -->
-<div class="view" id="view-enter">
-  <div class="page-wide">
-    <div class="grid-layout">
-      <!-- Left: grid -->
-      <div>
-        <div class="name-row">
-          <div class="name-field">
-            <label class="field-label">Your name</label>
-            <input class="input" id="participant-name-input" placeholder="What name do you go by?" oninput="onNameInput()">
-            <p id="edit-hint" style="display:none;font-size:12px;color:var(--green);font-weight:700;margin-top:5px;">✏️ We found your previous entry - update your times and save again.</p>
+      <div class="field">
+        <label class="field-label">Title</label>
+        <input class="input input-lg" id="s-title" placeholder="Team sync, bonfire, lunch...">
+        <div class="err" id="err-title">Please add a title.</div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- Method choice - no label needed, buttons are self-explanatory -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+        <button class="btn btn-outline" id="method-specific-btn" onclick="setMethod('specific')" style="flex:1;min-width:140px;padding:14px 10px;flex-direction:column;gap:4px;height:auto;">
+          <div style="font-size:20px;">📌</div>
+          <div style="font-size:13px;font-weight:800;">I have specific<br>dates in mind</div>
+        </button>
+        <button class="btn btn-outline" id="method-generate-btn" onclick="setMethod('generate')" style="flex:1;min-width:140px;padding:14px 10px;flex-direction:column;gap:4px;height:auto;">
+          <div style="font-size:20px;">⚡</div>
+          <div style="font-size:13px;font-weight:800;">Generate options<br>for me</div>
+        </button>
+      </div>
+
+      <!-- Duration - shown after method chosen, optional -->
+      <div id="dur-field" style="display:none;" class="field">
+        <label class="field-label">How long? <span class="opt-label">(optional)</span></label>
+        <div class="dur-row">
+          <select id="dur-num">
+            <option value="">-</option>
+            <option value="30">30</option>
+            <option value="45">45</option>
+            <option value="1" selected>1</option>
+            <option value="1.5">1.5</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="6">6</option>
+            <option value="8">8</option>
+            <option value="12">12</option>
+            <option value="24">24</option>
+          </select>
+          <select id="dur-unit">
+            <option value="min">minutes</option>
+            <option value="hr" selected>hours</option>
+            <option value="day">days</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Specific options panel -->
+      <div id="panel-specific" style="display:none;">
+        <div id="specific-list"></div>
+        <button class="btn btn-outline btn-sm" id="add-sopt-btn" onclick="addSpecific()" style="margin-bottom:4px;">+ Add a date &amp; time</button>
+        <div class="err" id="err-options">Add at least one option before creating the vote.</div>
+      </div>
+
+      <!-- Generator panel -->
+      <div id="panel-generate" style="display:none;">
+        <div class="field">
+          <label class="field-label">Preferred days <span class="opt-label">(none = any day)</span></label>
+          <div class="chip-row" id="day-row">
+            <button class="tog" data-v="1" onclick="multi(this)">Mon</button>
+            <button class="tog" data-v="2" onclick="multi(this)">Tue</button>
+            <button class="tog" data-v="3" onclick="multi(this)">Wed</button>
+            <button class="tog" data-v="4" onclick="multi(this)">Thu</button>
+            <button class="tog" data-v="5" onclick="multi(this)">Fri</button>
+            <button class="tog on" data-v="6" onclick="multi(this)">Sat</button>
+            <button class="tog on" data-v="0" onclick="multi(this)">Sun</button>
           </div>
-          <button class="btn btn-dark" id="save-btn" onclick="submitAvailability()" disabled>Save my times →</button>
-          <button class="btn btn-outline" id="view-results-btn" onclick="showView('results')" style="display:none;">View results</button>
         </div>
-        <p class="hint">Click and drag to mark when you're free. <span class="hint-green">Green = available.</span></p>
-        <div class="week-nav" id="enter-week-nav"></div>
-        <div class="grid-wrap">
-          <div class="avail-grid" id="enter-grid"></div>
-        </div>
-        <div class="responded-section" id="already-responded" style="display:none;">
-          <label class="field-label" style="margin-bottom:8px;">Already responded</label>
-          <div id="responded-chips" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
-        </div>
-      </div>
-      <!-- Right: share card + how it works -->
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div class="share-card" id="enter-share-card"></div>
-        <div class="card how-it-works">
-          <p class="how-label">How it works</p>
-          <ol class="how-list">
-            <li>Enter your name above</li>
-            <li>Mark when you're free on the calendar</li>
-            <li>Click <strong style="color:var(--dark)">Save my times</strong></li>
-            <li>Share the code, so others can do the same</li>
-          </ol>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
-<!-- ── RESULTS ────────────────────────────────────── -->
-<div class="view" id="view-results">
-  <div class="page-wide">
-    <div class="results-layout">
-      <!-- Left: overview grid -->
-      <div>
-        <h2 style="font-size:24px;font-weight:800;margin-bottom:4px;">Availability overview</h2>
-        <p id="results-subtitle" style="color:var(--muted);font-size:14px;margin-bottom:12px;"></p>
-        <div class="week-nav" id="results-week-nav"></div>
-        <div class="grid-wrap">
-          <div class="avail-grid" id="results-grid"></div>
+        <div class="field">
+          <label class="field-label">Preferred time(s) of day <span class="opt-label">(none = any)</span></label>
+          <div class="chip-row" id="tod-row">
+            <button class="tog" data-v="morning"   onclick="multi(this)">🌅 Morning</button>
+            <button class="tog" data-v="afternoon" onclick="multi(this)">☀️ Afternoon</button>
+            <button class="tog on" data-v="evening" onclick="multi(this)">🌆 Evening</button>
+            <button class="tog" data-v="late"      onclick="multi(this)">🌙 Late night</button>
+          </div>
         </div>
-        <div class="legend">
-          <div class="legend-item"><div class="legend-swatch" style="background:#EEEEEE"></div> No one</div>
-          <div class="legend-item"><div class="legend-swatch" style="background:#A8D8B4"></div> Some</div>
-          <div class="legend-item"><div class="legend-swatch" style="background:var(--slot-green)"></div> Many</div>
-          <div class="legend-item"><div class="legend-swatch" style="background:var(--slot-teal)"></div> Most</div>
-          <div class="legend-item"><div class="legend-swatch" style="background:var(--primary)"></div> All</div>
+
+        <div class="field">
+          <label class="field-label">Preferred time frame</label>
+          <div class="chip-row" id="range-row">
+            <button class="tog" data-v="week"    onclick="solo(this,'range-row')">This week</button>
+            <button class="tog on" data-v="2w"   onclick="solo(this,'range-row')">Next 2 weeks</button>
+            <button class="tog" data-v="month"   onclick="solo(this,'range-row')">This month</button>
+            <button class="tog" data-v="quarter" onclick="solo(this,'range-row')">Next 3 months</button>
+          </div>
         </div>
+
+        <button class="btn btn-outline btn-full" onclick="generateOpts()">⚡ Generate options</button>
+
+        <div id="gen-preview" style="display:none;margin-top:14px;">
+          <div class="sec-title" style="margin-bottom:8px;">Generated options <span class="opt-label">(remove any you don't want)</span></div>
+          <div id="gen-list"></div>
+        </div>
+        <div class="err" id="err-options-gen">Generate at least one option before creating the vote.</div>
       </div>
-      <!-- Right: sidebar -->
-      <div style="display:flex;flex-direction:column;gap:12px;">
-        <div class="card" id="best-times-card">
-          <h3 style="font-size:15px;font-weight:800;margin-bottom:12px;">Best times</h3>
-          <div id="best-times-list"></div>
-        </div>
-        <div class="card" id="who-responded-card">
-          <h3 style="font-size:15px;font-weight:800;margin-bottom:12px;">Who's responded</h3>
-          <div id="who-responded-list"></div>
-          <button class="btn btn-outline" style="width:100%;margin-top:12px;font-size:13px;" onclick="goAddMine()">✏️ Edit my times</button>
-        </div>
-        <div class="share-card" id="results-share-card"></div>
+
+      <hr class="divider" id="launch-divider" style="display:none;">
+      <button class="btn btn-green btn-full" id="launch-btn" onclick="launch()" style="padding:14px;display:none;">Create vote &amp; get share code →</button>
+      <div style="margin-top:10px;">
+        <button class="btn btn-outline btn-sm" onclick="showView('home')">← Back</button>
       </div>
     </div>
   </div>
+
+  <!-- VOTE -->
+  <div class="view" id="view-vote">
+
+    <div class="name-hero" id="name-hero">
+      <label class="field-label">Your name</label>
+      <input class="input input-lg" id="v-name" placeholder="What do people call you?" autocomplete="given-name" oninput="onNameInput()">
+      <div class="err" id="err-vname">Please enter your name to vote.</div>
+    </div>
+
+    <div class="winner-banner" id="winner-banner" style="display:none;">
+      <div class="w-label">🎉 It's happening!</div>
+      <div class="w-date" id="winner-date"></div>
+      <div class="w-sub"  id="winner-sub"></div>
+    </div>
+
+    <div class="card" style="padding:16px 18px;margin-bottom:12px;">
+      <div style="font-size:20px;font-weight:800;" id="v-title"></div>
+      <div style="font-size:13px;color:var(--muted);margin-top:3px;" id="v-meta"></div>
+    </div>
+
+    <div class="sec-title" style="margin:0 2px 8px;">Pick all times that work for you</div>
+
+    <div id="vote-list"></div>
+
+    <div class="suggest-wrap" id="sug-toggle" onclick="toggleSuggest()">
+      ➕ None of these - suggest a different time
+    </div>
+    <div class="suggest-form" id="sug-form">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+        <div style="flex:1;min-width:130px;">
+          <label class="field-label">Date</label>
+          <input class="input" type="date" id="sug-date">
+        </div>
+        <div style="flex:1;min-width:110px;">
+          <label class="field-label">Time</label>
+          <input class="input" type="time" id="sug-time">
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm btn-full" onclick="submitSuggestion()">Submit suggestion</button>
+    </div>
+
+    <div class="bottom-bar">
+      <button class="btn btn-green btn-full" id="vote-btn" disabled onclick="submitVote()" style="padding:14px;">
+        Save my votes
+      </button>
+    </div>
+
+    <!-- Organizer section -->
+    <div id="org-section" style="display:none;margin-top:24px;">
+      <hr class="divider">
+      <div class="sec-title">Organizer - confirm the date</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Pick the winning time and everyone will see it confirmed.</p>
+      <div id="org-list"></div>
+    </div>
+
+    <!-- Who voted -->
+    <div id="who-section" style="display:none;margin-top:20px;">
+      <hr class="divider">
+      <div class="sec-title">Who voted</div>
+      <div id="who-list"></div>
+    </div>
+
+  </div>
+
 </div>
 
 <script>
-// ── Config ─────────────────────────────────────────────────
-// Replace this with your deployed Apps Script URL
+// ────────────────────────────────────────────────────────
 const GS_URL = "https://script.google.com/macros/s/AKfycbzorQnmouatmpXCsPy1NBKnu-OdgpOdAkS5f4DikOIENU4TxzgqUhNbmRm2aXX2-g5c9w/exec";
 
-// ── State ──────────────────────────────────────────────────
-let currentSession  = null;
-let sessionCode     = "";
-let selectedSlots   = new Set();
-let isDragging      = false;
-let dragMode        = null; // "add" | "remove"
-let weekStart       = getMondayOf(new Date());
-let currentView     = "home";
-let refreshInterval = null;
-let copied          = false;
+const DAYS   = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const COLORS = ["#1B6896","#2E7D52","#C05A14","#1A6B7A","#5B4FCF","#B5116A","#C07A00","#1D7A5C"];
+const TOD    = { morning:[7,8,9,10], afternoon:[12,13,14,15,16], evening:[17,18,19,20], late:[21,22,23] };
 
-const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7am–8pm
-const PARTICIPANT_COLORS = ["#1B6896","#2E7D52","#C05A14","#1A6B7A","#5B4FCF","#B5116A","#C07A00","#1D7A5C","#2860B0"];
+// ── State ──────────────────────────────────────────────
+let session  = null;
+let code     = null;
+let myName   = "";
+let myPicks  = new Set();
+let isOrg    = false;
+let soptCount = 0;
+let genOpts  = [];
+let refreshTimer = null;
 
-// ── Date helpers ───────────────────────────────────────────
-function getMondayOf(date) {
-  const d = new Date(date);
-  const day = d.getDay();
-  d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day));
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-function addDays(date, n) {
-  const d = new Date(date);
-  d.setDate(d.getDate() + n);
-  return d;
-}
-function getWeekDates(monday) {
-  return Array.from({ length: 7 }, (_, i) => addDays(monday, i));
-}
-function dateKey(date) {
-  return date.toISOString().split("T")[0];
-}
-function slotKey(dateStr, hour) {
-  return `${dateStr}-${hour}`;
+// ── Tiny helpers ───────────────────────────────────────
+const esc  = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const uid  = () => Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+const addD = (d,n) => { const r=new Date(d); r.setDate(r.getDate()+n); return r; };
+function makeCode() {
+  const w1=["oak","pine","moss","heron","ember","stone","creek","fern","tide","reef"];
+  const w2=["swift","calm","bright","deep","wild","free","warm","bold","clear","still"];
+  return `${w1[Math.random()*10|0]}-${w2[Math.random()*10|0]}-${10+Math.random()*89|0}`;
 }
 function fmtHour(h) {
-  if (h === 12) return "12 pm";
-  return h > 12 ? `${h - 12} pm` : `${h} am`;
+  const a=h>=12?"pm":"am", hr=h>12?h-12:(h===0?12:h);
+  return `${hr}:00 ${a}`;
 }
-function fmtDateRange(a, b) {
-  const opts = { month: "short", day: "numeric" };
-  return `${a.toLocaleDateString("en-US", opts)} – ${b.toLocaleDateString("en-US", opts)}`;
+function fmtLabel(dateObj, hour) {
+  return `${DAYS[dateObj.getDay()]}, ${MONTHS[dateObj.getMonth()]} ${dateObj.getDate()} · ${fmtHour(hour)}`;
 }
-function fmtDayLabel(dateStr) {
-  const d = new Date(dateStr + "T12:00:00");
-  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-}
-
-// ── Code generator ─────────────────────────────────────────
-function generateCode() {
-  const words = ["oak","river","bloom","sky","stone","moss","tide","grove","glow","dawn","fern","vale"];
-  const pick  = () => words[Math.floor(Math.random() * words.length)];
-  return `${pick()}-${pick()}-${Math.floor(100 + Math.random() * 900)}`;
+function durStr(s) {
+  if (!s.durNum || s.durNum==="-" || s.durNum==="") return "";
+  const n = s.durNum, u = s.durUnit;
+  return `${n} ${u==="min"?"min":u==="hr"?(n==1?"hour":"hours"):(n==1?"day":"days")}`;
 }
 
-// ── JSONP API ──────────────────────────────────────────────
-function apiCall(params) {
-  return new Promise((resolve, reject) => {
-    const cbName  = "cb_" + Math.random().toString(36).slice(2);
-    const timeout = setTimeout(() => {
-      delete window[cbName];
-      script.remove();
-      reject(new Error("Request timed out"));
-    }, 12000);
-
-    window[cbName] = (data) => {
-      clearTimeout(timeout);
-      delete window[cbName];
-      script.remove();
-      resolve(data);
-    };
-
-    const qs = Object.entries({ ...params, callback: cbName })
-      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(typeof v === "object" ? JSON.stringify(v) : v)}`)
-      .join("&");
-
-    const script = document.createElement("script");
-    script.src = GS_URL + "?" + qs;
-    script.onerror = () => {
-      clearTimeout(timeout);
-      delete window[cbName];
-      reject(new Error("Network error"));
-    };
-    document.head.appendChild(script);
-  });
-}
-
-async function apiGetSession(code)   { return apiCall({ action: "get",    code }); }
-async function apiSaveSession(session){ return apiCall({ action: "save",   session }); }
-
-// ── Views ──────────────────────────────────────────────────
+// ── View switching ─────────────────────────────────────
 function showView(name) {
-  isSubmitting = false;
-  if (name === "home") {
-    currentSession = null;
-    sessionCode    = "";
-    selectedSlots  = new Set();
-    document.getElementById("session-title-input").value = "";
-    document.getElementById("join-code-input").value     = "";
-    document.getElementById("join-error").style.display  = "none";
-  }
-  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-  document.getElementById("view-" + name).classList.add("active");
-  currentView = name;
-  updateHeader();
-  if (name === "enter")   { renderEnterView(); }
-  if (name === "results") { renderResultsView(); startRefresh(); }
-  else                    { stopRefresh(); }
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-"+name).classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+  if (name==="vote") startRefresh();
+  else stopRefresh();
+}
+function resetToHome() {
+  session=null; code=null; myName=""; myPicks.clear(); isOrg=false;
+  soptCount=0; genOpts=[]; activeMethod=null;
+  document.getElementById("header-code").style.display="none";
+  document.getElementById("specific-list").innerHTML="";
+  document.getElementById("gen-preview").style.display="none";
+  document.getElementById("panel-specific").style.display="none";
+  document.getElementById("panel-generate").style.display="none";
+  document.getElementById("dur-field").style.display="none";
+  showView("home");
 }
 
-function updateHeader() {
-  const tagline = document.getElementById("header-tagline");
-  const actions = document.getElementById("header-actions");
-  tagline.textContent = currentSession ? currentSession.title : "Find a time · Together";
+// ── Toggle helpers ─────────────────────────────────────
+function solo(el, rowId) { // single-select row
+  document.querySelectorAll(`#${rowId} .tog`).forEach(t=>t.classList.remove("on"));
+  el.classList.add("on");
+}
+function multi(el) { el.classList.toggle("on"); }
+function getVals(rowId) {
+  return [...document.querySelectorAll(`#${rowId} .tog.on`)].map(t=>t.dataset.v);
+}
 
-  if (currentView === "home" || currentView === "create" || currentView === "join") {
-    actions.innerHTML = currentView !== "home"
-      ? `<button class="btn btn-outline btn-sm" onclick="showView('home')">← Back</button>` : "";
+let activeMethod = null;
+function setMethod(method) {
+  activeMethod = method;
+  // Highlight chosen button
+  document.getElementById("method-specific-btn").style.borderColor = method==="specific" ? "var(--primary)" : "";
+  document.getElementById("method-specific-btn").style.color       = method==="specific" ? "var(--primary)" : "";
+  document.getElementById("method-generate-btn").style.borderColor = method==="generate" ? "var(--primary)" : "";
+  document.getElementById("method-generate-btn").style.color       = method==="generate" ? "var(--primary)" : "";
+  // Show duration
+  document.getElementById("dur-field").style.display = "block";
+  // Show correct panel
+  document.getElementById("panel-specific").style.display = method==="specific" ? "block" : "none";
+  document.getElementById("panel-generate").style.display = method==="generate" ? "block" : "none";
+  // Auto-open first row for specific
+  if (method==="specific" && soptCount===0) addSpecific();
+  // Show launch button
+  document.getElementById("launch-divider").style.display = "block";
+  document.getElementById("launch-btn").style.display     = "block";
+}
+
+// ── Specific options ───────────────────────────────────
+function addSpecific() {
+  if (soptCount >= 7) return;
+  soptCount++;
+  const id = "s"+soptCount;
+  const wrap = document.getElementById("specific-list");
+  const row = document.createElement("div");
+  row.className = "sopt-row"; row.id = id;
+  row.innerHTML = `
+    <input type="date" class="input" id="${id}d" style="flex:1.2;">
+    <input type="time" class="input" id="${id}t" style="flex:1;" value="18:00">
+    <button class="remove-btn" onclick="removeSpecific('${id}')">×</button>`;
+  wrap.appendChild(row);
+  if (soptCount>=7) document.getElementById("add-sopt-btn").style.display="none";
+}
+function removeSpecific(id) {
+  document.getElementById(id)?.remove();
+  soptCount--;
+  document.getElementById("add-sopt-btn").style.display="inline-flex";
+}
+function getSpecifics() {
+  const out = [];
+  document.querySelectorAll(".sopt-row").forEach(row => {
+    const id=row.id, date=document.getElementById(id+"d")?.value, time=document.getElementById(id+"t")?.value;
+    if (!date||!time) return;
+    const d=new Date(date+"T"+time);
+    const [hh,mm]=time.split(":").map(Number);
+    const a=hh>=12?"pm":"am", hr=hh>12?hh-12:(hh===0?12:hh);
+    const ms=mm>0?`:${String(mm).padStart(2,"0")}` :"";
+    out.push({ id:uid(), label:`${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()} · ${hr}${ms} ${a}`, voters:[], ts:d.getTime() });
+  });
+  return out;
+}
+
+// ── Generator ─────────────────────────────────────────
+function generateOpts() {
+  const range  = getVals("range-row")[0]||"2w";
+  const days   = getVals("day-row").map(Number);
+  const tods   = getVals("tod-row");
+  const today  = new Date(); today.setHours(0,0,0,0);
+  const end    = addD(today, range==="week"?7:range==="2w"?14:range==="month"?31:90);
+
+  // Representative hours
+  let hours=[];
+  if (!tods.length) { hours=[9,12,17,19]; }
+  else {
+    tods.forEach(t => {
+      const hs=TOD[t]||[];
+      if (hs.length) hours.push(hs[0], hs[Math.floor(hs.length/2)]);
+    });
+    hours=[...new Set(hours)].sort((a,b)=>a-b);
+  }
+
+  const candidates=[];
+  let d=addD(today,1);
+  while (d<=end) {
+    const dow=d.getDay();
+    if (!days.length||days.includes(dow)) {
+      hours.forEach(h=>candidates.push({date:new Date(d),hour:h}));
+    }
+    d=addD(d,1);
+  }
+  if (!candidates.length) { alert("No options found - try different filters."); return; }
+
+  const MAX=7;
+  let picked=candidates.length<=MAX ? candidates
+    : Array.from({length:MAX},(_,i)=>candidates[Math.round(i*(candidates.length-1)/(MAX-1))]);
+
+  genOpts = picked.map(c=>({
+    id:uid(),
+    label:fmtLabel(c.date,c.hour),
+    voters:[],
+    ts: new Date(c.date).setHours(c.hour,0,0,0)
+  }));
+  renderGenPreview();
+}
+function renderGenPreview() {
+  document.getElementById("gen-list").innerHTML = genOpts.map((o,i)=>`
+    <div class="gen-row" id="gr${i}">
+      <div class="g-label">${esc(o.label)}</div>
+      <button class="btn btn-outline btn-sm" onclick="removeGen(${i})">Remove</button>
+    </div>`).join("");
+  document.getElementById("gen-preview").style.display = genOpts.length?"block":"none";
+}
+function removeGen(i) { genOpts.splice(i,1); renderGenPreview(); }
+
+// ── Launch ─────────────────────────────────────────────
+async function launch() {
+  const title = document.getElementById("s-title").value.trim();
+  if (!title) { document.getElementById("err-title").style.display="block"; return; }
+  document.getElementById("err-title").style.display="none";
+
+  const specifics = activeMethod==="specific" ? getSpecifics() : [];
+  const generated = activeMethod==="generate" ? genOpts : [];
+  const all = [...specifics, ...generated].slice(0,7);
+
+  if (!all.length) {
+    const errId = activeMethod==="generate" ? "err-options-gen" : "err-options";
+    document.getElementById(errId).style.display="block";
     return;
   }
+  document.getElementById(activeMethod==="generate"?"err-options-gen":"err-options").style.display="none";
 
-  actions.innerHTML = `
-    <button class="btn btn-outline btn-sm" id="header-copy-btn" onclick="copyCode()">📋 Code: ${sessionCode}</button>
-    <button class="btn btn-outline btn-sm" onclick="showView('home')" title="Start a new session">+ New session</button>
-    ${currentView === "results" ? `<button class="btn btn-outline btn-sm" onclick="goAddMine()">+ Add mine</button>` : ""}
-  `;
+  const durNum  = document.getElementById("dur-num").value;
+  const durUnit = document.getElementById("dur-unit").value;
+  const orgPin  = uid().slice(0,6);
+  const newCode = makeCode();
+
+  const newSession = { title, durNum, durUnit, options:all, winner:null, organizerPin:orgPin, suggestions:[], voters:[], createdAt:Date.now() };
+
+  try { await apiSave(newCode, newSession); } catch(e) { console.warn("Server save failed, local only", e); }
+
+  session=newSession; code=newCode; isOrg=true;
+  localStorage.setItem("org-"+newCode, orgPin);
+
+  showHeader(newCode);
+  showView("vote");
+  renderVote();
 }
 
-// ── Create ─────────────────────────────────────────────────
-async function createSession() {
-  const title = document.getElementById("session-title-input").value.trim();
-  if (!title) return;
-  const code    = generateCode();
-  const session = { code, title, participants: [], createdAt: Date.now() };
-  try {
-    await apiSaveSession(session);
-  } catch(e) {
-    // Fallback: save locally and continue - works for single device
-    console.warn("Could not save to server, using local session", e);
-  }
-  currentSession = session;
-  sessionCode    = code;
-  selectedSlots  = new Set();
-  showView("enter");
-}
-
-// ── Join ───────────────────────────────────────────────────
+// ── Join ───────────────────────────────────────────────
 async function joinSession() {
-  const code = document.getElementById("join-code-input").value.trim().toLowerCase();
-  if (!code) return;
-  const errEl = document.getElementById("join-error");
+  const c = document.getElementById("join-code").value.trim().toLowerCase();
+  const errEl = document.getElementById("join-err");
+  if (!c) return;
   try {
-    const result = await apiGetSession(code);
-    if (result && result.session) {
-      currentSession = result.session;
-      sessionCode    = code;
-      selectedSlots  = new Set();
-      errEl.style.display = "none";
-      showView("enter");
-    } else {
-      errEl.style.display = "block";
+    const data = await apiGet(c);
+    if (data?.session) {
+      session=data.session; code=c;
+      isOrg = localStorage.getItem("org-"+c)===session.organizerPin;
+      errEl.style.display="none";
+      showHeader(c);
+      showView("vote");
+      renderVote();
+    } else { errEl.style.display="block"; }
+  } catch(e) { errEl.style.display="block"; }
+}
+
+function showHeader(c) {
+  const hc = document.getElementById("header-code");
+  hc.style.display="flex"; hc.textContent=`📋 Code: ${c}`;
+}
+function copyCode() {
+  if (!code) return;
+  const txt=`Vote on when to meet for "${session?.title}" - use code: ${code} at https://jessieupp.github.io/DayBalancer-events/find-a-time.html`;
+  navigator.clipboard.writeText(txt).then(()=>{
+    document.getElementById("header-code").textContent="✓ Copied!";
+    setTimeout(()=>showHeader(code),2000);
+  });
+}
+
+// ── Render vote view ────────────────────────────────────
+function renderVote() {
+  if (!session) return;
+  document.getElementById("v-title").textContent = session.title;
+  document.getElementById("v-meta").textContent  = `${durStr(session)} · ${session.options.length} options to vote on`;
+
+  // Winner
+  const wb = document.getElementById("winner-banner");
+  if (session.winner) {
+    const w=session.options.find(o=>o.id===session.winner);
+    if (w) {
+      wb.style.display="block";
+      document.getElementById("winner-date").textContent=w.label;
+      document.getElementById("winner-sub").textContent=durStr(session);
+      document.getElementById("name-hero").style.display="none";
     }
-  } catch(e) {
-    errEl.style.display = "block";
-  }
-}
-
-// ── Submit availability ────────────────────────────────────
-let isSubmitting = false;
-
-async function submitAvailability() {
-  if (isSubmitting) return;
-  const name = document.getElementById("participant-name-input").value.trim();
-  if (!name || selectedSlots.size === 0) return;
-
-  isSubmitting = true;
-  const btn = document.getElementById("save-btn");
-  if (btn) { btn.disabled = true; btn.className = "btn btn-disabled"; btn.textContent = "Saved ✓"; }
-
-  // Build updated session locally first
-  const latest = currentSession;
-  const existingIndex = latest.participants.findIndex(
-    p => p.name.toLowerCase() === name.toLowerCase()
-  );
-
-  let participants;
-  if (existingIndex >= 0) {
-    participants = latest.participants.map((p, i) =>
-      i === existingIndex ? { ...p, slots: Array.from(selectedSlots) } : p
-    );
   } else {
-    const newP = {
-      name,
-      slots: Array.from(selectedSlots),
-      color: PARTICIPANT_COLORS[latest.participants.length % PARTICIPANT_COLORS.length],
-    };
-    participants = [...latest.participants, newP];
+    wb.style.display="none";
+    document.getElementById("name-hero").style.display="block";
   }
 
-  const updated = { ...latest, participants };
-
-  // Show results immediately with local data
-  currentSession = updated;
-  showView("results");
-
-  // Save to server in background - no await blocking the UI
-  apiGetSession(sessionCode)
-    .then(r => r && r.session ? r.session : latest)
-    .catch(() => latest)
-    .then(serverLatest => {
-      // Re-apply this person's submission on top of latest server state
-      const idx = serverLatest.participants.findIndex(
-        p => p.name.toLowerCase() === name.toLowerCase()
-      );
-      let serverParticipants;
-      if (idx >= 0) {
-        serverParticipants = serverLatest.participants.map((p, i) =>
-          i === idx ? { ...p, slots: Array.from(selectedSlots) } : p
-        );
-      } else {
-        serverParticipants = [...serverLatest.participants, {
-          name,
-          slots: Array.from(selectedSlots),
-          color: PARTICIPANT_COLORS[serverLatest.participants.length % PARTICIPANT_COLORS.length],
-        }];
-      }
-      const serverUpdated = { ...serverLatest, participants: serverParticipants };
-      return apiSaveSession(serverUpdated).then(() => serverUpdated);
-    })
-    .then(saved => {
-      // Quietly update with authoritative server version
-      currentSession = saved;
-      if (currentView === "results") renderResultsView();
-    })
-    .catch(() => {})
-    .finally(() => { isSubmitting = false; });
-}
-
-function goAddMine() {
-  selectedSlots = new Set();
-  isSubmitting  = false;
-  document.getElementById("participant-name-input").value = "";
-  showView("enter");
-}
-
-// Load existing slots when name is typed and matches a previous entry
-function onNameInput() {
-  updateSaveBtn();
-  const name = document.getElementById("participant-name-input").value.trim().toLowerCase();
-  if (!name || !currentSession) return;
-  const existing = currentSession.participants.find(p => p.name.toLowerCase() === name);
-  if (existing) {
-    // Pre-fill their previous slots so they can edit
-    selectedSlots = new Set(existing.slots);
-    renderEnterView(); // re-render grid with slots pre-selected
-    document.getElementById("participant-name-input").value = existing.name; // restore name after re-render
-    const hint = document.getElementById("edit-hint");
-    if (hint) hint.style.display = "block";
-  } else {
-    const hint = document.getElementById("edit-hint");
-    if (hint) hint.style.display = "none";
+  // Restore name + picks
+  const saved = myName || localStorage.getItem("wtm-name-"+code)||"";
+  if (saved) {
+    document.getElementById("v-name").value=saved; myName=saved;
+    myPicks=new Set(session.options.filter(o=>o.voters.some(v=>v.name.toLowerCase()===saved.toLowerCase())).map(o=>o.id));
   }
+
+  renderCards();
+  renderWho();
+  updateBtn();
+
+  // Org section
+  const os=document.getElementById("org-section");
+  if (isOrg&&!session.winner) { os.style.display="block"; renderOrgList(); }
+  else os.style.display="none";
 }
 
-// ── Week nav ───────────────────────────────────────────────
-function renderWeekNav(containerId, onPrev, onNext) {
-  const el = document.getElementById(containerId);
-  const weekDates = getWeekDates(weekStart);
-  const today     = getMondayOf(new Date());
-  el.innerHTML = `
-    <button class="nav-btn" onclick="${onPrev}">‹</button>
-    <span class="week-label">${fmtDateRange(weekDates[0], weekDates[6])}</span>
-    <button class="nav-btn" onclick="${onNext}">›</button>
-    ${weekStart > today ? `<button class="btn btn-outline btn-sm" onclick="goToday()">Today</button>` : ""}
-  `;
-}
-
-function prevWeek() { weekStart = addDays(weekStart, -7); renderCurrentView(); }
-function nextWeek() { weekStart = addDays(weekStart,  7); renderCurrentView(); }
-function goToday()  { weekStart = getMondayOf(new Date()); renderCurrentView(); }
-
-function renderCurrentView() {
-  if (currentView === "enter")   renderEnterView();
-  if (currentView === "results") renderResultsView();
-}
-
-// ── Drag handling ──────────────────────────────────────────
-function handleSlotMouseDown(key) {
-  const adding = !selectedSlots.has(key);
-  dragMode = adding ? "add" : "remove";
-  isDragging = true;
-  adding ? selectedSlots.add(key) : selectedSlots.delete(key);
-  updateSlotVisual(key);
-  updateSaveBtn();
-}
-
-function handleSlotMouseEnter(key) {
-  if (!isDragging) return;
-  dragMode === "add" ? selectedSlots.add(key) : selectedSlots.delete(key);
-  updateSlotVisual(key);
-  updateSaveBtn();
-}
-
-function updateSlotVisual(key) {
-  const el = document.querySelector(`[data-key="${key}"]`);
-  if (!el) return;
-  if (selectedSlots.has(key)) {
-    el.classList.add("selected");
-  } else {
-    el.classList.remove("selected");
-  }
-}
-
-document.addEventListener("mouseup",  () => { isDragging = false; });
-document.addEventListener("touchend", () => { isDragging = false; });
-
-function handleTouchMove(e) {
-  if (!isDragging) return;
-  e.preventDefault();
-  const touch = e.touches[0];
-  const el    = document.elementFromPoint(touch.clientX, touch.clientY);
-  if (el && el.dataset.key) {
-    const key = el.dataset.key;
-    dragMode === "add" ? selectedSlots.add(key) : selectedSlots.delete(key);
-    updateSlotVisual(key);
-    updateSaveBtn();
-  }
-}
-
-function updateSaveBtn() {
-  const name = document.getElementById("participant-name-input")?.value.trim();
-  const btn  = document.getElementById("save-btn");
-  if (!btn) return;
-  const canSave = name && selectedSlots.size > 0;
-  btn.disabled = !canSave;
-  btn.className = "btn" + (canSave ? " btn-dark" : " btn-disabled");
-}
-
-// ── Render Enter View ──────────────────────────────────────
-function renderEnterView() {
-  const weekDates = getWeekDates(weekStart);
-  const isMobile  = window.innerWidth < 640;
-  const visible   = isMobile ? weekDates.slice(0, 4) : weekDates;
-  const cols      = visible.length;
-  const todayStr  = dateKey(new Date());
-
-  renderWeekNav("enter-week-nav", "prevWeek()", "nextWeek()");
-
-  const grid = document.getElementById("enter-grid");
-  grid.style.gridTemplateColumns = `44px repeat(${cols}, 1fr)`;
-
-  let html = '<div></div>';
-  visible.forEach(date => {
-    const dk      = dateKey(date);
-    const isToday = dk === todayStr;
-    html += `<div class="day-header">
-      <div class="day-name">${date.toLocaleDateString("en-US",{weekday:"short"})}</div>
-      <div class="day-num${isToday?" today":""}">${date.getDate()}</div>
+function renderCards() {
+  const maxV=Math.max(...session.options.map(o=>o.voters.length),1);
+  let html=session.options.map(o=>{
+    const picked=myPicks.has(o.id), winner=session.winner===o.id;
+    const cls=winner?"vote-card is-winner":picked?"vote-card picked":"vote-card";
+    const check=winner?"🏆":picked?"✓":"";
+    const pct=Math.round(o.voters.length/maxV*100);
+    const names=o.voters.map(v=>esc(v.name)).join(", ");
+    const disabled=session.winner?"style='cursor:default;pointer-events:none;'":"";
+    return `<div class="${cls}" onclick="togglePick('${o.id}')" ${disabled}>
+      <div class="vote-check">${check}</div>
+      <div class="vote-body">
+        <div class="vote-day">${esc(o.label)}</div>
+        ${names?`<div class="vote-names">${names}</div>`:""}
+        <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="vote-count">
+        <div class="vote-num">${o.voters.length}</div>
+        <div class="vote-lbl">${o.voters.length===1?"vote":"votes"}</div>
+      </div>
     </div>`;
+  }).join("");
+
+  // Suggestions
+  if (session.suggestions?.length) {
+    html+=`<div class="sec-title" style="margin:16px 2px 8px;">Suggestions from voters</div>`;
+    html+=session.suggestions.map(s=>`
+      <div class="gen-row" style="border-style:dashed;">
+        <div><div class="g-label">${esc(s.label)}</div><div style="font-size:12px;color:var(--muted);">Suggested by ${esc(s.name)}</div></div>
+      </div>`).join("");
+  }
+  document.getElementById("vote-list").innerHTML=html;
+}
+
+function renderWho() {
+  const voters=session.voters||[];
+  const ws=document.getElementById("who-section");
+  if (!voters.length) { ws.style.display="none"; return; }
+  ws.style.display="block";
+  document.getElementById("who-list").innerHTML=voters.map((v,i)=>`
+    <div class="voter-row">
+      <div class="voter-dot" style="background:${COLORS[i%COLORS.length]}"></div>
+      <span style="font-size:14px;font-weight:600;">${esc(v.name)}</span>
+      <span style="font-size:12px;color:var(--muted);margin-left:auto;">${v.count} ${v.count===1?"pick":"picks"}</span>
+    </div>`).join("");
+}
+
+function renderOrgList() {
+  document.getElementById("org-list").innerHTML=session.options.map(o=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-weight:700;font-size:14px;">${esc(o.label)}</div>
+        <div style="font-size:12px;color:var(--muted);">${o.voters.length} ${o.voters.length===1?"vote":"votes"}</div>
+      </div>
+      <button class="btn btn-green btn-sm" onclick="confirmWinner('${o.id}')">✓ This one</button>
+    </div>`).join("");
+}
+
+// ── Interactions ────────────────────────────────────────
+function togglePick(id) {
+  if (session.winner) return;
+  myPicks.has(id)?myPicks.delete(id):myPicks.add(id);
+  renderCards(); updateBtn();
+}
+function onNameInput() { updateBtn(); }
+function updateBtn() {
+  const name=document.getElementById("v-name")?.value.trim();
+  const btn=document.getElementById("vote-btn");
+  const ok=name&&myPicks.size>0&&!session.winner;
+  btn.disabled=!ok;
+  btn.className="btn btn-full "+(ok?"btn-green":"btn-disabled");
+}
+
+async function submitVote() {
+  const name=document.getElementById("v-name").value.trim();
+  if (!name||!myPicks.size) return;
+  myName=name; localStorage.setItem("wtm-name-"+code, name);
+
+  // Remove previous votes from this person, add fresh
+  session.options.forEach(o=>{
+    o.voters=o.voters.filter(v=>v.name.toLowerCase()!==name.toLowerCase());
+    if (myPicks.has(o.id)) o.voters.push({name});
   });
+  if (!session.voters) session.voters=[];
+  session.voters=session.voters.filter(v=>v.name.toLowerCase()!==name.toLowerCase());
+  session.voters.push({name, count:myPicks.size});
 
-  HOURS.forEach(h => {
-    html += `<div class="time-label">${fmtHour(h)}</div>`;
-    visible.forEach(date => {
-      const key = slotKey(dateKey(date), h);
-      const sel = selectedSlots.has(key) ? " selected" : "";
-      html += `<div class="slot${sel}" data-key="${key}"
-        onmousedown="handleSlotMouseDown('${key}')"
-        onmouseenter="handleSlotMouseEnter('${key}')"
-        ontouchstart="isDragging=true;dragMode=!selectedSlots.has('${key}')? 'add':'remove';handleSlotMouseDown('${key}')"
-      ></div>`;
-    });
-  });
-
-  grid.innerHTML = html;
-  grid.addEventListener("touchmove", handleTouchMove, { passive: false });
-
-  updateSaveBtn();
-
-  // View results btn
-  const vrBtn = document.getElementById("view-results-btn");
-  if (currentSession?.participants.length > 0) {
-    vrBtn.style.display = "inline-block";
-  }
-
-  // Already responded
-  const respondedSection = document.getElementById("already-responded");
-  const respondedChips   = document.getElementById("responded-chips");
-  if (currentSession?.participants.length > 0) {
-    respondedSection.style.display = "block";
-    respondedChips.innerHTML = currentSession.participants.map(p =>
-      `<span class="chip" style="border-color:${p.color}">
-        <span class="chip-dot" style="background:${p.color}"></span>${esc(p.name)}
-      </span>`
-    ).join("");
-  }
-
-  // Share card
-  renderShareCard("enter-share-card");
+  renderCards(); renderWho();
+  const btn=document.getElementById("vote-btn");
+  btn.textContent="Saved ✓"; btn.disabled=true;
+  setTimeout(()=>{ btn.textContent="Save my votes"; updateBtn(); },2000);
+  try { await apiSave(code,session); } catch(e) {}
 }
 
-// ── Render Results View ────────────────────────────────────
-function renderResultsView() {
-  const overlap   = getOverlapData();
-  const total     = currentSession?.participants.length || 0;
-  const weekDates = getWeekDates(weekStart);
-  const isMobile  = window.innerWidth < 640;
-  const visible   = isMobile ? weekDates.slice(0, 4) : weekDates;
-  const cols      = visible.length;
-  const todayStr  = dateKey(new Date());
-
-  document.getElementById("results-subtitle").textContent =
-    `${total} ${total === 1 ? "person has" : "people have"} responded. Darker = more people free.`;
-
-  renderWeekNav("results-week-nav", "prevWeek()", "nextWeek()");
-
-  const grid = document.getElementById("results-grid");
-  grid.style.gridTemplateColumns = `44px repeat(${cols}, 1fr)`;
-
-  let html = '<div></div>';
-  visible.forEach(date => {
-    const dk      = dateKey(date);
-    const isToday = dk === todayStr;
-    html += `<div class="day-header">
-      <div class="day-name">${date.toLocaleDateString("en-US",{weekday:"short"})}</div>
-      <div class="day-num${isToday?" today":""}">${date.getDate()}</div>
-    </div>`;
-  });
-
-  HOURS.forEach(h => {
-    html += `<div class="time-label">${fmtHour(h)}</div>`;
-    visible.forEach(date => {
-      const key   = slotKey(dateKey(date), h);
-      const ps    = overlap[key] || [];
-      const ratio = ps.length / Math.max(total, 1);
-      const cls   = ps.length === 0 ? "r0"
-        : ratio >= 0.99 ? "r99"
-        : ratio >= 0.66 ? "r66"
-        : ratio >= 0.33 ? "r33"
-        : "r1";
-      const title = ps.length > 0 ? ps.map(p => p.name).join(", ") : "";
-      html += `<div class="slot ${cls}" title="${esc(title)}"></div>`;
-    });
-  });
-
-  grid.innerHTML = html;
-
-  // Best times
-  const bestTimes = getBestTimes();
-  const btList    = document.getElementById("best-times-list");
-  if (bestTimes.length === 0) {
-    btList.innerHTML = `<p style="color:var(--muted);font-size:14px;">Add more responses to find overlaps.</p>`;
-  } else {
-    btList.innerHTML = bestTimes.map(([key, ps]) => {
-      const parts    = key.split("-");
-      const hour     = parseInt(parts[parts.length - 1]);
-      const datePart = parts.slice(0, 3).join("-");
-      const pct      = Math.round((ps.length / total) * 100);
-      return `<div class="best-time-item">
-        <div class="best-time-title">${fmtDayLabel(datePart)} · ${fmtHour(hour)}</div>
-        <div class="best-time-names">${ps.map(p => esc(p.name)).join(", ")} (${ps.length}/${total})</div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${ps.length===total?"var(--primary)":"var(--slot-green)"}"></div></div>
-      </div>`;
-    }).join("");
-  }
-
-  // Who responded
-  const wrList = document.getElementById("who-responded-list");
-  if (total === 0) {
-    wrList.innerHTML = `<p style="color:var(--muted);font-size:14px;">No responses yet.</p>`;
-  } else {
-    wrList.innerHTML = currentSession.participants.map(p =>
-      `<div class="responded-row">
-        <div style="width:9px;height:9px;border-radius:50%;background:${p.color};flex-shrink:0;"></div>
-        <span style="font-size:14px;font-weight:500;">${esc(p.name)}</span>
-        <span style="font-size:12px;color:var(--muted);margin-left:auto;">${p.slots.length} slots</span>
-      </div>`
-    ).join("");
-  }
-
-  renderShareCard("results-share-card");
-  updateHeader();
+function toggleSuggest() {
+  document.getElementById("sug-form").classList.toggle("open");
+}
+async function submitSuggestion() {
+  const name=document.getElementById("v-name")?.value.trim();
+  const date=document.getElementById("sug-date").value;
+  const time=document.getElementById("sug-time").value;
+  if (!name) { alert("Enter your name first."); return; }
+  if (!date||!time) { alert("Pick a date and time."); return; }
+  const d=new Date(date+"T"+time);
+  const [hh]=time.split(":").map(Number);
+  const a=hh>=12?"pm":"am", hr=hh>12?hh-12:(hh===0?12:hh);
+  const label=`${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()} · ${hr}:00 ${a}`;
+  if (!session.suggestions) session.suggestions=[];
+  session.suggestions.push({name,label});
+  document.getElementById("sug-form").classList.remove("open");
+  renderCards();
+  try { await apiSave(code,session); } catch(e) {}
 }
 
-// ── Share card ─────────────────────────────────────────────
-function renderShareCard(containerId) {
-  const el = document.getElementById(containerId);
-  if (!el || !currentSession) return;
-  el.innerHTML = `
-    <p class="share-label">Session</p>
-    <p class="share-title">${esc(currentSession.title)}</p>
-    <p class="share-label">Share this code</p>
-    <div class="code-box">${sessionCode}</div>
-    <div class="share-btns">
-      <button class="btn btn-outline" id="${containerId}-copy" onclick="copyCode('${containerId}-copy')">📋 Copy code</button>
-      <button class="btn btn-ghost" onclick="shareInvite()">⬆️ Share invite</button>
-    </div>
-  `;
+async function confirmWinner(optId) {
+  session.winner=optId;
+  const w=session.options.find(o=>o.id===optId);
+  document.getElementById("winner-banner").style.display="block";
+  document.getElementById("winner-date").textContent=w.label;
+  document.getElementById("winner-sub").textContent=durStr(session);
+  document.getElementById("name-hero").style.display="none";
+  document.getElementById("org-section").style.display="none";
+  document.getElementById("sug-toggle").style.display="none";
+  const bb=document.querySelector(".bottom-bar");
+  bb.innerHTML=`<button class="btn btn-primary btn-full" style="padding:14px;" onclick="shareWinner()">⬆️ Share the date with everyone</button>`;
+  renderCards();
+  try { await apiSave(code,session); } catch(e) {}
 }
 
-function copyCode(btnId) {
-  navigator.clipboard.writeText(sessionCode).catch(() => {});
-  const btn = document.getElementById(btnId || "header-copy-btn");
-  if (btn) {
-    const orig = btn.textContent;
-    btn.textContent = "✓ Copied!";
-    setTimeout(() => { btn.textContent = orig; }, 2000);
-  }
+function shareWinner() {
+  const w=session.options.find(o=>o.id===session.winner);
+  const txt=`📅 It's official! "${session.title}" is happening → ${w.label} (${durStr(session)}) 🎉`;
+  if (navigator.share) navigator.share({title:session.title,text:txt});
+  else navigator.clipboard.writeText(txt).then(()=>alert("Copied to clipboard!"));
 }
 
-function shareInvite() {
-  const text = `📅 ${currentSession?.title || "Find a time"}\n\nJoin and mark your availability - use this code:\n${sessionCode}`;
-  if (navigator.share) {
-    navigator.share({ title: currentSession?.title, text }).catch(() => {});
-  } else {
-    navigator.clipboard.writeText(text).catch(() => {});
-    alert("Invite copied to clipboard!\n\n" + text);
-  }
-}
-
-// ── Overlap + best times ───────────────────────────────────
-function getOverlapData() {
-  if (!currentSession) return {};
-  const map = {};
-  currentSession.participants.forEach(p => {
-    p.slots.forEach(slot => {
-      if (!map[slot]) map[slot] = [];
-      map[slot].push(p);
-    });
-  });
-  return map;
-}
-
-function getBestTimes() {
-  const overlap = getOverlapData();
-  const total   = currentSession?.participants.length || 0;
-  if (total === 0) return [];
-  return Object.entries(overlap)
-    .sort((a, b) => b[1].length - a[1].length)
-    .filter(([, ps]) => ps.length > 1)
-    .slice(0, 5);
-}
-
-// ── Auto-refresh ───────────────────────────────────────────
+// ── Auto-refresh ────────────────────────────────────────
 function startRefresh() {
   stopRefresh();
-  refreshInterval = setInterval(async () => {
-    if (!sessionCode) return;
+  refreshTimer=setInterval(async()=>{
+    if (!code) return;
     try {
-      const r = await apiGetSession(sessionCode);
-      if (r && r.session) {
-        currentSession = r.session;
-        renderResultsView();
+      const data=await apiGet(code);
+      if (data?.session) {
+        // Keep my current picks, update vote counts from server
+        const srv=data.session;
+        const myCurrentPicks=new Set(myPicks);
+        session=srv;
+        myPicks=myCurrentPicks;
+        renderCards(); renderWho();
+        if (srv.winner) renderVote(); // full re-render for winner state
       }
-    } catch {}
-  }, 20000);
+    } catch(e){}
+  },8000);
 }
+function stopRefresh() { if(refreshTimer){clearInterval(refreshTimer);refreshTimer=null;} }
 
-function stopRefresh() {
-  if (refreshInterval) clearInterval(refreshInterval);
-  refreshInterval = null;
+// ── API ─────────────────────────────────────────────────
+function apiCall(params) {
+  return new Promise((res,rej)=>{
+    const cb="cb_"+Date.now()+"_"+Math.random().toString(36).slice(2);
+    const to=setTimeout(()=>{delete window[cb];sc.remove();rej(new Error("timeout"));},12000);
+    window[cb]=data=>{clearTimeout(to);delete window[cb];sc.remove();res(data);};
+    const qs=Object.entries({...params,callback:cb}).map(([k,v])=>`${encodeURIComponent(k)}=${encodeURIComponent(typeof v==="object"?JSON.stringify(v):v)}`).join("&");
+    const sc=document.createElement("script");
+    sc.src=GS_URL+"?"+qs;
+    sc.onerror=()=>{clearTimeout(to);delete window[cb];rej(new Error("failed"));};
+    document.head.appendChild(sc);
+  });
 }
-
-// ── Util ───────────────────────────────────────────────────
-function esc(str) {
-  return String(str || "")
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;");
-}
-
-// Responsive: re-render on resize
-let resizeTimer;
-window.addEventListener("resize", () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(renderCurrentView, 150);
-});
+async function apiGet(c)       { return apiCall({action:"get",  code:c}); }
+async function apiSave(c,sess) { return apiCall({action:"save", session:{...sess,code:c}}); }
 </script>
-
 </body>
 </html>

@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <!--
-  When to Meet · A simple event timing vote
+  Find a Time · A simple event timing vote
   Brought to you by DayBalancer LLC
   https://daybalancer.com
-  Version 3.0
+  Version 3.2
 -->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DayBalancer · When to Meet</title>
+  <title>When to Meet · A simple event timing vote</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -567,6 +567,7 @@ function generateOpts() {
   renderGenPreview();
   document.getElementById("launch-divider").style.display = "block";
   document.getElementById("launch-btn").style.display     = "block";
+}
 function renderGenPreview() {
   document.getElementById("gen-list").innerHTML = genOpts.map((o,i)=>`
     <div class="gen-row" id="gr${i}">

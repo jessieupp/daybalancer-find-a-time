@@ -4,7 +4,7 @@
   When to Meet · A simple event timing vote
   Brought to you by DayBalancer LLC
   https://daybalancer.com
-  Version 2.2
+  Version 2.5
 -->
 <head>
   <meta charset="UTF-8">
@@ -215,37 +215,33 @@
         </button>
       </div>
 
-      <!-- Duration - shown after method chosen, optional -->
-      <div id="dur-field" style="display:none;" class="field">
-        <label class="field-label">How long? <span class="opt-label">(optional)</span></label>
-        <div class="dur-row">
-          <select id="dur-num">
-            <option value="">-</option>
-            <option value="30">30</option>
-            <option value="45">45</option>
-            <option value="1" selected>1</option>
-            <option value="1.5">1.5</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="6">6</option>
-            <option value="8">8</option>
-            <option value="12">12</option>
-            <option value="24">24</option>
-          </select>
-          <select id="dur-unit">
-            <option value="min">minutes</option>
-            <option value="hr" selected>hours</option>
-            <option value="day">days</option>
-          </select>
-        </div>
-      </div>
+      <!-- Duration moved into each panel -->
+
 
       <!-- Specific options panel -->
       <div id="panel-specific" style="display:none;">
         <div id="specific-list"></div>
-        <button class="btn btn-outline btn-sm" id="add-sopt-btn" onclick="addSpecific()" style="margin-bottom:4px;">+ Add a date &amp; time</button>
+        <button class="btn btn-outline btn-sm" id="add-sopt-btn" onclick="addSpecific()" style="margin-bottom:12px;">+ Add a date &amp; time</button>
         <div class="err" id="err-options">Add at least one option before creating the vote.</div>
+        <div class="field" style="margin-top:4px;">
+          <label class="field-label">Duration <span class="opt-label">(optional)</span></label>
+          <div class="dur-row">
+            <select id="dur-num">
+              <option value="">-</option>
+              <option value="30">30</option><option value="45">45</option>
+              <option value="1" selected>1</option><option value="1.5">1.5</option>
+              <option value="2">2</option><option value="3">3</option>
+              <option value="4">4</option><option value="6">6</option>
+              <option value="8">8</option><option value="12">12</option>
+              <option value="24">24</option>
+            </select>
+            <select id="dur-unit">
+              <option value="min">minutes</option>
+              <option value="hr" selected>hours</option>
+              <option value="day">days</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <!-- Generator panel -->
@@ -290,6 +286,26 @@
           <div id="gen-list"></div>
         </div>
         <div class="err" id="err-options-gen">Generate at least one option before creating the vote.</div>
+
+        <div class="field" style="margin-top:16px;">
+          <label class="field-label">Duration <span class="opt-label">(optional)</span></label>
+          <div class="dur-row">
+            <select id="dur-num-gen">
+              <option value="">-</option>
+              <option value="30">30</option><option value="45">45</option>
+              <option value="1" selected>1</option><option value="1.5">1.5</option>
+              <option value="2">2</option><option value="3">3</option>
+              <option value="4">4</option><option value="6">6</option>
+              <option value="8">8</option><option value="12">12</option>
+              <option value="24">24</option>
+            </select>
+            <select id="dur-unit-gen">
+              <option value="min">minutes</option>
+              <option value="hr" selected>hours</option>
+              <option value="day">days</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <hr class="divider" id="launch-divider" style="display:none;">
@@ -423,7 +439,6 @@ function resetToHome() {
   document.getElementById("gen-preview").style.display="none";
   document.getElementById("panel-specific").style.display="none";
   document.getElementById("panel-generate").style.display="none";
-  document.getElementById("dur-field").style.display="none";
   showView("home");
 }
 
@@ -446,7 +461,6 @@ function setMethod(method) {
   document.getElementById("method-generate-btn").style.borderColor = method==="generate" ? "var(--primary)" : "";
   document.getElementById("method-generate-btn").style.color       = method==="generate" ? "var(--primary)" : "";
   // Show duration
-  document.getElementById("dur-field").style.display = "block";
   // Show correct panel
   document.getElementById("panel-specific").style.display = method==="specific" ? "block" : "none";
   document.getElementById("panel-generate").style.display = method==="generate" ? "block" : "none";
@@ -522,8 +536,24 @@ function generateOpts() {
   if (!candidates.length) { alert("No options found - try different filters."); return; }
 
   const MAX=7;
-  let picked=candidates.length<=MAX ? candidates
-    : Array.from({length:MAX},(_,i)=>candidates[Math.round(i*(candidates.length-1)/(MAX-1))]);
+  // Group candidates by date string to avoid skipping dates
+  const byDate = {};
+  candidates.forEach(c => {
+    const key = c.date.toISOString().split("T")[0];
+    if (!byDate[key]) byDate[key] = [];
+    byDate[key].push(c);
+  });
+  const dates = Object.keys(byDate).sort();
+
+  // Spread evenly across dates (not raw candidates)
+  let pickedDates = dates.length <= MAX ? dates
+    : Array.from({length:MAX}, (_,i) => dates[Math.round(i*(dates.length-1)/(MAX-1))]);
+
+  // From each date, pick the middle hour option for variety
+  let picked = pickedDates.map(dk => {
+    const opts = byDate[dk];
+    return opts[Math.floor(opts.length/2)];
+  });
 
   genOpts = picked.map(c=>({
     id:uid(),
@@ -560,8 +590,10 @@ async function launch() {
   }
   document.getElementById(activeMethod==="generate"?"err-options-gen":"err-options").style.display="none";
 
-  const durNum  = document.getElementById("dur-num").value;
-  const durUnit = document.getElementById("dur-unit").value;
+  const durNumId  = activeMethod==="generate" ? "dur-num-gen"  : "dur-num";
+  const durUnitId = activeMethod==="generate" ? "dur-unit-gen" : "dur-unit";
+  const durNum  = document.getElementById(durNumId)?.value  || "";
+  const durUnit = document.getElementById(durUnitId)?.value || "hr";
   const orgPin  = uid().slice(0,6);
   const newCode = makeCode();
 

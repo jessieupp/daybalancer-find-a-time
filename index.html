@@ -4,7 +4,7 @@
   When to Meet · A simple event timing vote
   Brought to you by DayBalancer LLC
   https://daybalancer.com
-  Version 2.8
+  Version 3.0
 -->
 <head>
   <meta charset="UTF-8">
@@ -309,7 +309,7 @@
       </div>
 
       <hr class="divider" id="launch-divider" style="display:none;">
-      <button class="btn btn-green btn-full" id="launch-btn" onclick="launch()" style="padding:14px;display:none;">Create vote &amp; get share code →</button>
+      <button class="btn btn-primary btn-full" id="launch-btn" onclick="launch()" style="padding:14px;display:none;">Create vote &amp; get share code →</button>
       <div style="margin-top:10px;">
         <button class="btn btn-outline btn-sm" onclick="showView('home')">← Back</button>
       </div>
@@ -466,9 +466,9 @@ function setMethod(method) {
   document.getElementById("panel-generate").style.display = method==="generate" ? "block" : "none";
   // Auto-open first row for specific
   if (method==="specific" && soptCount===0) addSpecific();
-  // Show launch button
-  document.getElementById("launch-divider").style.display = "block";
-  document.getElementById("launch-btn").style.display     = "block";
+  // Launch button stays hidden until they add dates or generate options
+  document.getElementById("launch-divider").style.display = "none";
+  document.getElementById("launch-btn").style.display     = "none";
 }
 
 // ── Specific options ───────────────────────────────────
@@ -485,6 +485,9 @@ function addSpecific() {
     <button class="remove-btn" onclick="removeSpecific('${id}')">×</button>`;
   wrap.appendChild(row);
   if (soptCount>=7) document.getElementById("add-sopt-btn").style.display="none";
+  // Show launch button now that there's at least one date row
+  document.getElementById("launch-divider").style.display = "block";
+  document.getElementById("launch-btn").style.display     = "block";
 }
 function removeSpecific(id) {
   document.getElementById(id)?.remove();
@@ -562,7 +565,8 @@ function generateOpts() {
     ts: new Date(c.date).setHours(c.hour,0,0,0)
   }));
   renderGenPreview();
-}
+  document.getElementById("launch-divider").style.display = "block";
+  document.getElementById("launch-btn").style.display     = "block";
 function renderGenPreview() {
   document.getElementById("gen-list").innerHTML = genOpts.map((o,i)=>`
     <div class="gen-row" id="gr${i}">

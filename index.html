@@ -4,7 +4,7 @@
   When to Meet · A simple event timing vote
   Brought to you by DayBalancer LLC
   https://daybalancer.com
-  Version 2.5
+  Version 2.7
 -->
 <head>
   <meta charset="UTF-8">
@@ -262,10 +262,10 @@
         <div class="field">
           <label class="field-label">Preferred time(s) of day <span class="opt-label">(none = any)</span></label>
           <div class="chip-row" id="tod-row">
-            <button class="tog" data-v="morning"   onclick="multi(this)">🌅 Morning</button>
-            <button class="tog" data-v="afternoon" onclick="multi(this)">☀️ Afternoon</button>
-            <button class="tog on" data-v="evening" onclick="multi(this)">🌆 Evening</button>
-            <button class="tog" data-v="late"      onclick="multi(this)">🌙 Late night</button>
+            <button class="tog" data-v="morning"   onclick="multi(this)">Morning 7:00 am →</button>
+            <button class="tog" data-v="afternoon" onclick="multi(this)">Afternoon 12:00 pm →</button>
+            <button class="tog on" data-v="evening" onclick="multi(this)">Evening 5:00 pm →</button>
+            <button class="tog" data-v="late"      onclick="multi(this)">Late night 9:00 pm →</button>
           </div>
         </div>
 
@@ -515,11 +515,11 @@ function generateOpts() {
 
   // Representative hours
   let hours=[];
-  if (!tods.length) { hours=[9,12,17,19]; }
+  if (!tods.length) { hours=[9,12,17,21]; }
   else {
     tods.forEach(t => {
       const hs=TOD[t]||[];
-      if (hs.length) hours.push(hs[0], hs[Math.floor(hs.length/2)]);
+      if (hs.length) hours.push(hs[0]);
     });
     hours=[...new Set(hours)].sort((a,b)=>a-b);
   }
@@ -549,10 +549,10 @@ function generateOpts() {
   let pickedDates = dates.length <= MAX ? dates
     : Array.from({length:MAX}, (_,i) => dates[Math.round(i*(dates.length-1)/(MAX-1))]);
 
-  // From each date, pick the middle hour option for variety
+  // From each date, pick the earliest hour option
   let picked = pickedDates.map(dk => {
     const opts = byDate[dk];
-    return opts[Math.floor(opts.length/2)];
+    return opts[0];
   });
 
   genOpts = picked.map(c=>({

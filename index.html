@@ -4,7 +4,7 @@
   Find a Time · A simple event timing vote
   Brought to you by DayBalancer LLC
   https://daybalancer.com
-  Version 3.5
+  Version 3.7
 -->
 <head>
   <meta charset="UTF-8">
@@ -172,6 +172,16 @@
       <p style="color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:28px;">Propose a few times, share with others, select a winning time to meet.</p>
       <button class="btn btn-primary btn-full" style="margin-bottom:10px;padding:14px;" onclick="showView('setup')">🗓️ Find a time</button>
       <button class="btn btn-outline btn-full" style="padding:14px;" onclick="showView('join')">⊞ I have a code</button>
+    </div>
+    <div id="resume-card" style="display:none;margin-top:12px;">
+      <div class="card" style="padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px;">Your last vote</div>
+          <div id="resume-title" style="font-weight:800;font-size:15px;"></div>
+          <div id="resume-code" style="font-size:13px;color:var(--muted);margin-top:2px;"></div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="resumeVote()">Resume →</button>
+      </div>
     </div>
   </div>
 
@@ -431,6 +441,22 @@ function showView(name) {
   if (name==="vote") startRefresh();
   else stopRefresh();
 }
+function resumeVote() {
+  const c = localStorage.getItem("wtm-last-code");
+  if (!c) return;
+  document.getElementById("join-code").value = c;
+  joinSession();
+}
+
+function checkResumeCard() {
+  const c = localStorage.getItem("wtm-last-code");
+  const t = localStorage.getItem("wtm-last-title");
+  if (!c) return;
+  document.getElementById("resume-title").textContent = t || "Untitled vote";
+  document.getElementById("resume-code").textContent  = "Code: " + c.toUpperCase();
+  document.getElementById("resume-card").style.display = "block";
+}
+
 function resetToHome() {
   session=null; code=null; myName=""; myPicks.clear(); isOrg=false;
   soptCount=0; genOpts=[]; activeMethod=null;
@@ -608,6 +634,8 @@ async function launch() {
 
   session=newSession; code=newCode; isOrg=true;
   localStorage.setItem("org-"+newCode, orgPin);
+  localStorage.setItem("wtm-last-code", newCode);
+  localStorage.setItem("wtm-last-title", title);
 
   showHeader(newCode);
   showView("vote");
@@ -624,6 +652,8 @@ async function joinSession() {
     if (data?.session) {
       session=data.session; code=c;
       isOrg = localStorage.getItem("org-"+c)===session.organizerPin;
+      localStorage.setItem("wtm-last-code", c);
+      localStorage.setItem("wtm-last-title", data.session.title || "");
       errEl.style.display="none";
       showHeader(c);
       showView("vote");
@@ -855,6 +885,7 @@ function apiCall(params) {
 }
 async function apiGet(c)       { return apiCall({action:"get",  code:c}); }
 async function apiSave(c,sess) { return apiCall({action:"save", session:{...sess,code:c}}); }
+checkResumeCard();
 </script>
 </body>
 </html>
